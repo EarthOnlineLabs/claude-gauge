@@ -52,8 +52,6 @@ pretending to be fresh.
   macOS keychain item "Claude Code-credentials".
 - Atomic writes to `cache.json` so the plugin never reads a half-written
   file.
-- macOS notifications when crossing the 75% / 90% thresholds, once per
-  window per round.
 
 #### Self-healing token (key innovation)
 - Claude Code does not refresh the keychain token while idle, so it
