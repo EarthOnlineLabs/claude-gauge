@@ -3,3 +3,7 @@ node_modules/
 .vercel/
 *.log
 site/.vercel/
+
+# Local-only: AI agent constitution + internal correction log (not for public repo)
+/CLAUDE.md
+/tasks/
