@@ -104,24 +104,26 @@
   /* ---------- mock menu bar demo ---------- */
   .demo{margin:56px auto 0;max-width:760px}
   .macbar{
-    position:relative;background:linear-gradient(180deg,#f4f1ea,#ece8df);
+    position:relative;background:rgba(250,249,247,.94);
     border:1px solid var(--line);border-bottom:none;
-    border-radius:14px 14px 0 0;height:30px;display:flex;align-items:center;
-    padding:0 16px;gap:7px;
+    border-radius:14px 14px 0 0;height:32px;display:flex;align-items:center;
+    padding:0 14px;gap:16px;font-size:13px;color:#34343a;
   }
-  .macbar .traffic{display:flex;gap:7px}
-  .macbar .traffic i{width:11px;height:11px;border-radius:50%;display:block}
-  .macbar .traffic .r{background:#ff5f57}.macbar .traffic .y{background:#febc2e}.macbar .traffic .g{background:#28c840}
-  .macbar .right{margin-left:auto;display:flex;align-items:center;gap:14px}
-  .macbar .sysicon{color:#5a5a5f;font-size:13px;opacity:.7}
-  .pill{
-    display:inline-flex;align-items:center;gap:6px;background:var(--pill-bg);color:#fff;
-    font-family:var(--mono);font-size:12.5px;font-weight:600;line-height:1;
-    padding:5px 9px;border-radius:7px;letter-spacing:-.01em;
+  .macbar .appl svg{width:14px;height:14px;display:block;opacity:.82}
+  .macbar .mb-menus{display:flex;gap:15px;font-size:13px;opacity:.62}
+  .macbar .mb-menus b{font-weight:600;opacity:1}
+  .macbar .right{margin-left:auto;display:flex;align-items:center;gap:12px}
+  .macbar .sysicon{opacity:.58}
+  .macbar .clock{opacity:.85;font-variant-numeric:tabular-nums}
+  /* the ClaudeGauge item — plain menu-bar text, never a pill */
+  .mbg{
+    display:inline-flex;align-items:center;gap:5px;padding:3px 7px;border-radius:6px;
+    font-size:13px;font-weight:500;line-height:1;color:var(--ink);
+    font-variant-numeric:tabular-nums;white-space:nowrap;
   }
-  .pill .dial{width:13px;height:13px}
-  .pill.warn{background:var(--warn)}
-  .pill.crit{background:var(--crit)}
+  .mbg .dial{width:14px;height:14px}
+  .mbg.lit{background:rgba(0,0,0,.08)}
+  .mbg.warn{color:var(--warn)}.mbg.crit{color:var(--crit)}.mbg.stale{color:#9a9a9a}
 
   .screen{
     background:var(--card);border:1px solid var(--line);border-radius:0 0 14px 14px;
@@ -154,13 +156,12 @@
   .dd-foot{padding:11px 16px;background:#fbfaf7;font-size:11.5px;color:var(--ink-faint);display:flex;align-items:center;gap:7px;border-top:1px solid var(--line-soft)}
 
   .demo-legend{text-align:left}
-  .demo-legend h3{font-size:17px;letter-spacing:-.01em;margin:0 0 14px}
-  .leg{display:flex;gap:12px;margin-bottom:16px;align-items:flex-start}
-  .leg .chip{
-    flex:none;width:46px;height:26px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;
-    font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;margin-top:1px;
-  }
-  .chip.ok{background:var(--pill-bg)}.chip.warn{background:var(--warn)}.chip.crit{background:var(--crit)}.chip.stale{background:#9a9a9a}
+  .demo-legend h3{font-size:17px;letter-spacing:-.01em;margin:0 0 8px}
+  .legend-lead{font-size:13.5px;color:var(--ink-soft);line-height:1.55;margin:0 0 16px}
+  .leg{display:flex;gap:12px;margin-bottom:14px;align-items:flex-start}
+  .leg .mbg{flex:none;min-width:80px;justify-content:center;margin-top:1px;
+    background:linear-gradient(140deg,#eef2f8,#f6f0ea);border:1px solid var(--line)}
+  .leg .txt{font-size:13px;color:var(--ink-soft);line-height:1.5}
   .leg .txt{font-size:13.5px;color:var(--ink-soft);line-height:1.5}
   .leg .txt b{color:var(--ink);font-weight:600}
 
@@ -306,11 +307,14 @@
     <!-- mock window -->
     <div class="demo">
       <div class="macbar">
-        <div class="traffic"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+        <span class="appl"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.05 12.7c-.03-2.4 1.96-3.55 2.05-3.6-1.12-1.64-2.86-1.86-3.48-1.89-1.48-.15-2.89.87-3.64.87-.75 0-1.91-.85-3.14-.83-1.62.02-3.11.94-3.94 2.39-1.68 2.92-.43 7.24 1.2 9.61.8 1.16 1.75 2.46 3 2.41 1.2-.05 1.66-.78 3.11-.78 1.45 0 1.86.78 3.14.75 1.3-.02 2.12-1.18 2.91-2.35.92-1.35 1.3-2.66 1.32-2.73-.03-.01-2.53-.97-2.56-3.85zM14.7 5.6c.66-.8 1.1-1.92.98-3.03-.95.04-2.1.63-2.78 1.43-.61.71-1.14 1.84-1 2.93 1.06.08 2.14-.54 2.8-1.33z"/></svg></span>
+        <span class="mb-menus"><b>Claude Code</b><span>File</span><span>Edit</span><span>View</span></span>
         <div class="right">
-          <svg class="sysicon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a6 6 0 0 0-6 6v3l-2 4v1h16v-1l-2-4V8a6 6 0 0 0-6-6Z"/></svg>
-          <svg class="sysicon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 13a10 10 0 0 1 14 0M8.5 16.5a5 5 0 0 1 7 0"/></svg>
-          <span class="pill"><svg class="dial"><use href="#dial"/></svg> 49%</span>
+          <span class="mbg lit"><svg class="dial"><use href="#dial"/></svg> 49%</span>
+          <svg class="sysicon" width="23" height="14" viewBox="0 0 26 14" fill="none" aria-hidden="true"><rect x="1" y="2.5" width="20" height="9" rx="2.6" stroke="currentColor" stroke-width="1.3"/><rect x="2.8" y="4.3" width="13" height="5.4" rx="1.2" fill="currentColor"/><path d="M23.2 5v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <svg class="sysicon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 11a12 12 0 0 1 16 0M7.5 14.5a7 7 0 0 1 9 0"/><circle cx="12" cy="18" r="1.1" fill="currentColor" stroke="none"/></svg>
+          <svg class="sysicon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="5.5" width="18" height="5.4" rx="2.7"/><rect x="3" y="13.1" width="18" height="5.4" rx="2.7"/></svg>
+          <span class="clock">Sat 21:04</span>
         </div>
       </div>
       <div class="screen">
@@ -343,21 +347,22 @@
           </div>
         </div>
         <div class="demo-legend">
-          <h3>One status-aware signal light</h3>
+          <h3>One number, three colors</h3>
+          <p class="legend-lead"><b>It follows your intuition</b> — whichever limit is about to bite is the one that surfaces. When you're fine you just see your current session; the weekly window only steps in when it's the one to worry about.</p>
           <div class="leg">
-            <span class="chip ok">49%</span>
-            <span class="txt"><b>Plenty left (&lt;75%).</b> Shows just the current 5-hour window in near-black, hides the week. Quiet by design.</span>
+            <span class="mbg"><svg class="dial"><use href="#dial"/></svg> 49%</span>
+            <span class="txt"><b>Plenty (&lt;75%).</b> Session's fine, the week stays hidden — near-black and out of your way.</span>
           </div>
           <div class="leg">
-            <span class="chip warn">82% 38m</span>
-            <span class="txt"><b>Heads up (75–89%).</b> Amber, plus the reset countdown for whichever window is biting.</span>
+            <span class="mbg warn"><svg class="dial"><use href="#dial"/></svg> 82% 38m</span>
+            <span class="txt"><b>Heads up (75–89%).</b> The biting window turns amber and shows when it resets.</span>
           </div>
           <div class="leg">
-            <span class="chip crit">W93% 2d</span>
-            <span class="txt"><b>Critical (≥90%).</b> Red. The weekly 7-day wall wins ties — that's the hard limit.</span>
+            <span class="mbg crit"><svg class="dial"><use href="#dial"/></svg> W93% 2d</span>
+            <span class="txt"><b>Critical (≥90%).</b> Red. When the weekly 7-day wall is the real limit it wins the tie — that's what you need to see.</span>
           </div>
           <div class="leg">
-            <span class="chip stale">49%~</span>
+            <span class="mbg stale"><svg class="dial"><use href="#dial"/></svg> 49%~</span>
             <span class="txt"><b>Stale.</b> No fresh data for 15 min → grays out and adds <code style="font-family:var(--mono)">~</code>. It never fakes freshness.</span>
           </div>
         </div>
@@ -458,7 +463,7 @@
 <section id="how">
   <div class="wrap">
     <div class="sec-head">
-      <span class="eyebrow">Under the hood</span>
+      <span class="eyebrow">How it works</span>
       <h2>Three small layers</h2>
       <p>Each does one job. The render layer never touches the network when the background layer is healthy.</p>
     </div>
