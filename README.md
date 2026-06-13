@@ -10,7 +10,27 @@ ClaudeGauge puts your Claude Code (Pro/Max) quota right in the menu bar. It show
 
 [简体中文](README.zh-CN.md)
 
-![ClaudeGauge in the menu bar showing 49%](./docs/screenshots/menubar.png)
+![ClaudeGauge — the menu bar gauge and its expanded dropdown showing 5-hour and weekly usage](./docs/screenshots/showcase.png)
+
+<sub>A quiet gauge sits in your menu bar. Click it for the full breakdown — current 5-hour session, weekly window, progress bars, and reset countdowns.</sub>
+
+## Why ClaudeGauge?
+
+**See where you stand at a glance — without ever opening the usage page.** Claude Code's limits are real, but checking them means stopping to run `/usage` or reopening [claude.ai's usage settings](https://claude.ai/settings/usage) over and over. ClaudeGauge keeps that number *always visible* in your menu bar, so you never have to break flow to find out how close you are to a wall.
+
+**Safe and private — by design, not by promise.** A usage gauge has to read your account, so trust matters more than features. ClaudeGauge is built to earn it:
+
+- It reads **only** your usage numbers — **never** your conversations, prompts, files, or code.
+- Your auth token goes to **Anthropic's own endpoint and nowhere else** — no third-party servers, none of ours, zero telemetry.
+- It's **fully open source and unobfuscated** — every line is plain bash/python you can read before you run it, and `uninstall.sh` leaves no trace and never touches your credentials.
+
+**Smart where it counts** — a few touches that make it pleasant to live with:
+
+- 🩹 **Self-healing** — keeps working even after hours of idle by quietly renewing the expired auth token for you, so you never see a dead gauge.
+- 🚦 **Rate-limit-safe** — polls adaptively: barely at all when you have headroom, faster as a limit closes in.
+- 🤥 **Never lies** — if the data goes stale it grays out and says so, instead of showing a comforting wrong number.
+- 🔔 **Heads-up** — a native macOS notification when you cross 75% or 90%, so a wall never sneaks up on you.
+- 📐 **Notch-proof** — stays narrow enough that the MacBook notch can never swallow it.
 
 ## Features
 
@@ -103,4 +123,4 @@ Claude **Pro** and **Max** subscriptions, which expose the 5-hour and weekly usa
 
 ## Contributing
 
-Issues and pull requests are welcome. See [docs/](./docs/) for screenshots and additional notes. ClaudeGauge is released under the [MIT License](LICENSE) by [EarthOnline](https://github.com/earthonline).
+Issues and pull requests are welcome. See [docs/](./docs/) for screenshots and additional notes. ClaudeGauge is released under the [MIT License](LICENSE) by [EarthOnline](https://github.com/EarthOnlineDev).
