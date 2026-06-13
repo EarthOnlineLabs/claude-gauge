@@ -14,7 +14,7 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 - **口径与 Claude Code `/usage` 一致**：显示「已用 %」，越大越满（同源端点 `api.anthropic.com/api/oauth/usage`）。
 - **够用就静默，不够才报警**：默认近黑、只显当前 5 小时窗口；只有窗口紧张时才上色、显倒计时、显周窗口。
 - **绝不显示骗人的旧数据**：数据超过 15 分钟没更新就变灰加 `~` 并在下拉里警告。
-- **自愈 token**：Claude Code 闲置导致钥匙串 token 过期时，刷新器会自动让 CC 续命，无需人工干预。
+- **自愈 token（零额度）**：Claude Code 闲置导致钥匙串 token 过期时，刷新器用 refresh token 直接走 OAuth 刷新续命，零额度消耗、无需人工干预。
 
 协议 MIT。组织 EarthOnline（GitHub org `earthonline` / `EarthOnlineDev`）。
 
@@ -65,16 +65,16 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 ### 2.2 数据层 `refresher/claude-gauge-refresh.sh`
 
 - 由 LaunchAgent 触发，label `dev.earthonline.claude-gauge`，`StartInterval=30`（每 30 秒唤醒）。
-- **自适应节流**（`refresher/claude-gauge-refresh.sh:34-36`）：唤醒后先看上轮状态决定是否真的 poll。间隔 `iv`：
+- **自适应节流**（`refresher/claude-gauge-refresh.sh:68-70`）：唤醒后先看上轮状态决定是否真的 poll。间隔 `iv`：
   - 紧急（max 已用 ≥90%）→ 45s
   - 需关注（≥75%）或刚变化过 → 60s
   - 够用且静止 → 240s（防 429）
   - 未到间隔直接 `raise SystemExit(0)`；`force` 参数跳过节流。
 - **自愈 token（关键创新，零额度）**：token 在 60 秒内到期时（`now+60`），用钥匙串里的 refresh token 向 `https://platform.claude.com/v1/oauth/token` 发一次 OAuth 刷新（`refresh_oauth()`），换回新 token 并**原地写回钥匙串**——纯鉴权调用，零额度消耗。只改 `claudeAiOauth` 三字段、保留 `mcpOAuth` 等其余内容；refresh token 会轮换故必须写回。卡 60 秒是为了避开与活跃 CC（提前 5 分钟自刷新）抢轮换。
-- 用从 macOS 钥匙串 `Claude Code-credentials` 读到的 OAuth token 鉴权（`token()`，`:20-24`）。
-- 调 `https://api.anthropic.com/api/oauth/usage`，header 带 `anthropic-beta: oauth-2025-04-20`（`:40`）。
-- **原子写** `cache.json`：先写临时文件再 `os.replace`（`awrite`，`:15-19`），防止插件读到半截 JSON。
-- 状态持久化在 `refresh-state.json`：`last_poll_ts` / `last_max_util` / `last_5h` / `last_7d` / `changed`（`:54-55`）。
+- 从 macOS 钥匙串 `Claude Code-credentials` 读出完整凭证 blob 做鉴权（`kc_read()`，`:28-33`）；调用时带 `Authorization: Bearer <accessToken>`（`:74`）。
+- 调 `https://api.anthropic.com/api/oauth/usage`，header 带 `anthropic-beta: oauth-2025-04-20`（`:74`）。
+- **原子写** `cache.json`：先写临时文件再 `os.replace`（`awrite`，`:23-27`），防止插件读到半截 JSON。
+- 状态持久化在 `refresh-state.json`：`last_poll_ts` / `last_max_util` / `last_5h` / `last_7d` / `changed`（`:88-89`）。
 
 ### 2.3 桥接层（可选）`bridge/claude-gauge-statusline.py`
 
@@ -95,14 +95,38 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 
 ---
 
-## 4. 当前状态（已完成 / 可用）
+## 4. 当前状态（已完成 / 已上线 / 可交接）
+
+**产品已完成、已开源、已部署，可直接交接。**
+
+- **线上落地页**：https://claude-gauge.earthonline.site （HTTP 200，主打"只读用量不读对话 + 零额度"）
+- **开源仓库**：https://github.com/EarthOnlineDev/claude-gauge （PUBLIC，`HEAD == origin/main`，工作区干净已推送）
+- **运行时**：launchd 任务 `dev.earthonline.claude-gauge` 已加载运行；`~/.cache/claude-gauge/cache.json` 数据新鲜；SwiftBar 插件已装。
+- **安装一致性**：三个已安装文件与 repo **字节级一致**（经审计 `diff` 零差异）。
+
+功能勾选：
 
 - [x] 渲染层：状态感知信号灯、深浅色自适应、刘海宽度保护、陈旧检测、下拉详情、立即刷新按钮、插件自拉兜底。
-- [x] 数据层：LaunchAgent 自适应节流、原子写、token 自愈续命。
-- [x] 桥接层：CC statusLine 即时写 `live.json`（可选增强）。
+- [x] 数据层：LaunchAgent 自适应节流、原子写、**token 零额度自愈续命**。
+- [x] 桥接层：CC statusLine 即时写 `live.json`（可选增强；纯本地、零网络、零额度）。
 - [x] 安装 / 卸载脚本：`install.sh` 装 SwiftBar（如缺）、铺组件、写并加载 LaunchAgent、首拉数据；`uninstall.sh` 反向清理且不碰 CC 凭证与数据。
 
-**结论：三层均可用，安装即出菜单栏百分比。**
+### 已安装组件清单
+
+| 组件 | 安装位置 | repo 源 |
+|---|---|---|
+| 续命/刷新脚本 | `~/.claude/claude-gauge-refresh.sh` | `refresher/claude-gauge-refresh.sh` |
+| SwiftBar 插件 | `~/.swiftbar/claude-gauge.15s.sh` | `plugin/claude-gauge.15s.sh` |
+| statusline 桥接 | `~/.claude/claude-gauge-statusline.py` | `bridge/claude-gauge-statusline.py` |
+| LaunchAgent plist | `~/Library/LaunchAgents/dev.earthonline.claude-gauge.plist` | `install.sh` 内联生成 |
+
+运行时依赖仅：系统自带 `python3` + `security`（已无 `claude` CLI 依赖）。
+
+### 最近一次关键变更：`claude -p` → 零额度 OAuth 续命
+
+旧版自愈靠从 `/tmp` 跑 headless `claude -p ok`（消耗极小额度）。现已换成**直接 OAuth refresh**：token 将在 ≤60s 内过期时，用钥匙串里的 refresh token POST `https://platform.claude.com/v1/oauth/token`，拿回新 token 后**深拷贝整个 blob、只改 `claudeAiOauth` 三个 token 字段写回**，完整保留 `mcpOAuth` 与其余字段。纯鉴权调用、**零额度消耗**；refresh token 会轮换故必须写回；卡 60s 是避免与活跃 CC（提前 5 分钟自刷新）抢轮换。详见 §2.2 与 `docs/ARCHITECTURE.md` §6。
+
+**对外卖点定调**：首屏主打「只读官方用量、绝不读你的对话/代码（多数竞品在翻 `~/.claude/projects` 算用量）」+「免费、开源、零额度消耗」。**不主打"纯本地"**（默认要联网调 Anthropic 用量端点，仅桥接模式纯本地）、**不写"完全零消耗"以外的夸大**。
 
 ---
 
@@ -118,6 +142,9 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 
 ## 6. Roadmap / TODO
 
+- [ ] **阈值通知（设计已承诺、代码未实现）**：早期设计与用户需求里都有"跨过 75% / 90% 时弹原生 macOS 通知、每窗口每周期只提醒一次"，但**当前刷新器没有任何通知代码**（落地页曾据此宣称、现已撤掉该声明以保持诚实）。实现方式很轻：在 `refresher/claude-gauge-refresh.sh` 的变化检测段（`:87-88`，已有 `last_5h`/`last_7d`/`last_max_util` 状态）里检测**向上跨阈值**，用 `osascript -e 'display notification ...'` 发一次，并在 state 里记 per-window 去重标记防重复。实现后把落地页 features 的通知卡片加回来。
+- [ ] **`kc_account()` 解析健壮性**（`refresher/claude-gauge-refresh.sh:34-41`）：当前在标准 CC 安装上正确（解析出的 acct == `$USER`）。残余风险：若某机器 keychain 的 acct ≠ `$USER` 且文本解析失败，回退用 `$USER` 写回可能在错误 account 下**新建第二个钥匙串项**。改进：解析失败时**宁可不写也不猜 `$USER`**，或直接复用 `kc_read()` 成功时的 acct。低概率、不紧急。
+- [ ] **文档补充**：`refresh` 测试钩子即使 token 还新鲜也会强制 rotate（烧掉一次轮换，但 CC 内存里的 access_token 仍有效到真实过期、不会登出）——在 §7.3 或脚本注释里点明。
 - [ ] **用量趋势图**：现在只有当前快照。可在 `cache.json` 旁追加轻量时序日志（append-only），在下拉里画 5h / 7d 趋势 sparkline。
 - [ ] **可配置项**：阈值（75/90）、节流间隔、是否显示周窗口，目前都硬编码在脚本里。抽到 `~/.cache/claude-gauge/config.json` 或环境变量。
 - [ ] **打包成 `.app` / Homebrew tap**：当前靠 `install.sh` 手动铺文件。做一个 `earthonline/homebrew-tap`，`brew install --cask claude-gauge` 一键装（含 SwiftBar 依赖声明）。

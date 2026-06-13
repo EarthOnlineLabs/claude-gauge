@@ -549,7 +549,7 @@
         <div class="num">02 <span class="bar"></span> <span class="en">DATA</span><span class="zh">数据</span></div>
         <h3><span class="en">The refresher</span><span class="zh">刷新器</span></h3>
         <span class="tag">refresher/claude-gauge-refresh.sh</span>
-        <p><span class="en">A LaunchAgent (<code>dev.earthonline.claude-gauge</code>) fires every 30s and adaptively throttles — 45s when critical, 240s when idle to dodge <code>429</code>s. It polls the usage API, atomically writes the cache, self-heals the token via a zero-cost OAuth refresh, and sends threshold notifications.</span><span class="zh">一个 LaunchAgent（<code>dev.earthonline.claude-gauge</code>）每 30 秒触发一次，并自适应节流——告急时 45 秒，闲置时 240 秒，以躲开 <code>429</code> 限流。它轮询用量 API，原子地写入缓存，通过零成本的 OAuth 刷新给 token 续命，并在跨过阈值时发送通知。</span></p>
+        <p><span class="en">A LaunchAgent (<code>dev.earthonline.claude-gauge</code>) fires every 30s and adaptively throttles — 45s when critical, 240s when idle to dodge <code>429</code>s. It polls the usage API, atomically writes the cache, and self-heals the token via a zero-cost OAuth refresh.</span><span class="zh">一个 LaunchAgent（<code>dev.earthonline.claude-gauge</code>）每 30 秒触发一次，并自适应节流——告急时 45 秒，闲置时 240 秒，以躲开 <code>429</code> 限流。它轮询用量 API，原子地写入缓存，并通过零成本的 OAuth 刷新给 token 续命。</span></p>
       </div>
 
       <div class="layer">
@@ -595,12 +595,6 @@
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M9 4v3a3 3 0 0 0 6 0V4"/></svg></span>
         <h3><span class="en">Notch-friendly</span><span class="zh">刘海友好</span></h3>
         <p><span class="en">On notched Macs the menu bar title stays under ~90px (about 11 characters). Go wider and the notch swallows your icon whole — so the display is engineered to stay short no matter the state.</span><span class="zh">带刘海的 Mac 上，菜单栏标题始终压在约 90px（约 11 个字符）以内。再宽一点，刘海就会把你的图标整个吞掉——所以无论什么状态，显示都被刻意控制得够短。</span></p>
-      </div>
-
-      <div class="feat">
-        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
-        <h3><span class="en">Knows before you do</span><span class="zh">比你先知道</span></h3>
-        <p><span class="en">A background agent polls on an adaptive schedule and fires a native macOS notification the moment you cross 75% or 90% — once per window, per cycle, so it nudges without nagging.</span><span class="zh">一个后台任务按自适应节奏轮询，在你刚跨过 75% 或 90% 的那一刻，弹出原生 macOS 通知——每个窗口、每个周期只提醒一次，点到为止，绝不唠叨。</span></p>
       </div>
 
     </div>

@@ -24,7 +24,7 @@ Runtime cache lives in `~/.cache/claude-gauge/` (`cache.json`,
 
 Requirements: macOS, [SwiftBar](https://swiftbar.app)
 (`brew install --cask swiftbar`), a logged-in Claude Code with a Pro/Max
-subscription (provides the OAuth token and the `claude` CLI), and the
+subscription (provides the keychain OAuth token and refresh token), and the
 system `python3`.
 
 1. Clone and run `./install.sh`. It installs SwiftBar if missing, copies
@@ -89,7 +89,7 @@ Open an issue and include:
 
 依赖：macOS、[SwiftBar](https://swiftbar.app)
 （`brew install --cask swiftbar`）、已登录且为 Pro/Max 订阅的 Claude Code
-（提供 OAuth token 和 `claude` CLI）、系统自带 `python3`。
+（提供钥匙串里的 OAuth token 和 refresh token）、系统自带 `python3`。
 
 1. clone 后运行 `./install.sh`。它会在缺失时装好 SwiftBar、把各组件安装到
    位、加载 LaunchAgent（`dev.earthonline.claude-gauge`）并拉取首次数据。
