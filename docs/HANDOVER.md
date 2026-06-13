@@ -70,7 +70,7 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
   - 需关注（≥75%）或刚变化过 → 60s
   - 够用且静止 → 240s（防 429）
   - 未到间隔直接 `raise SystemExit(0)`；`force` 参数跳过节流。
-- **自愈 token（关键创新）**（`:26-32`）：token 在 20 分钟内（`now+1200`）到期时，从 `/tmp` 跑一次 headless `claude -p ok`（`cwd="/tmp"` 省 context 成本，超时 75s）。这让 CC 用 refresh token 续命并写回钥匙串，之后才能正常调 API。
+- **自愈 token（关键创新，零额度）**：token 在 60 秒内到期时（`now+60`），用钥匙串里的 refresh token 向 `https://platform.claude.com/v1/oauth/token` 发一次 OAuth 刷新（`refresh_oauth()`），换回新 token 并**原地写回钥匙串**——纯鉴权调用，零额度消耗。只改 `claudeAiOauth` 三字段、保留 `mcpOAuth` 等其余内容；refresh token 会轮换故必须写回。卡 60 秒是为了避开与活跃 CC（提前 5 分钟自刷新）抢轮换。
 - 用从 macOS 钥匙串 `Claude Code-credentials` 读到的 OAuth token 鉴权（`token()`，`:20-24`）。
 - 调 `https://api.anthropic.com/api/oauth/usage`，header 带 `anthropic-beta: oauth-2025-04-20`（`:40`）。
 - **原子写** `cache.json`：先写临时文件再 `os.replace`（`awrite`，`:15-19`），防止插件读到半截 JSON。
@@ -109,10 +109,10 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 ## 5. 已知局限
 
 1. **桥接仅对新会话生效**：注册 `statusLine` 后，只有之后新开的 Claude Code 会话才会写 `live.json`；已开会话不受影响。
-2. **`claude -p` 续命有极小额度成本**：自愈逻辑跑一次 headless `claude -p ok` 会消耗极少量额度（已通过 `cwd=/tmp` 最小化 context）。仅在 token 临近过期时触发，成本可忽略但非零。
+2. **续命依赖 OAuth 端点与凭证格式**：自愈走 `platform.claude.com/v1/oauth/token` + 固定 `client_id`，并按 CC 的钥匙串 JSON 结构写回。若 Anthropic 改了端点 / client_id / 凭证格式，续命会失效——届时降级为"诚实陈旧"变灰，不会报错，用户重新登录 CC 后自动恢复。**已无早期 `claude -p` 的额度成本，续命零消耗。**
 3. **usage 端点非高频设计**：`api/oauth/usage` 不是为高频轮询设计的，官方 `/usage` 页面自身缓存约 4 分钟。我们的自适应节流（够用时 240s）即为避免 429。改间隔时务必保守。
 4. **平台**：仅 macOS（依赖 SwiftBar、`security` 钥匙串、`launchctl`、`defaults`）。
-5. **订阅前提**：需已登录的 Claude Code（提供 token + `claude` CLI 用于续命）+ Pro/Max 订阅；系统自带 `python3`。
+5. **订阅前提**：需已登录的 Claude Code（提供钥匙串 token 与 refresh token）+ Pro/Max 订阅；系统自带 `python3`。
 
 ---
 
@@ -171,7 +171,7 @@ cat ~/.cache/claude-gauge/live.json
 - **陈旧检测**：停掉 LaunchAgent（`launchctl bootout gui/$(id -u)/dev.earthonline.claude-gauge`），等 >15 分钟，确认菜单栏变灰加 `~` 且下拉有警告。
 - **深浅色自适应**：切换系统外观（浅 ↔ 深），确认够用态文字颜色随之变化、保持可读。
 - **刘海宽度**：在带刘海的 Mac 上确认标题不会被吞（开 `extra_usage` 时 `+$` 是否被正确省略）。
-- **token 自愈**：让 CC 闲置到 token 临近过期，确认刷新器自动续命后菜单栏恢复更新（可在脚本里临时打日志观察 `claude -p` 是否被调用）。
+- **token 自愈**：跑 `bash ~/.claude/claude-gauge-refresh.sh refresh` 强制续命，确认钥匙串 token 轮换（尾位变）、`mcpOAuth` 等其余字段保留、cache 随即刷新；零额度（不触发任何模型推理）。
 
 ### 7.4 卸载验收
 

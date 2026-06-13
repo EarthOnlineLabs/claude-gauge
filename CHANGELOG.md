@@ -8,8 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2026-06-13
 
 First public release. A macOS menu-bar gauge for Claude Code (Pro/Max)
-usage — real-time, state-aware, self-healing, and never shows stale data
-pretending to be fresh.
+usage — real-time, state-aware, zero-cost self-healing, and never shows
+stale data pretending to be fresh.
 
 ### Added
 
@@ -53,13 +53,16 @@ pretending to be fresh.
 - Atomic writes to `cache.json` so the plugin never reads a half-written
   file.
 
-#### Self-healing token (key innovation)
+#### Self-healing token (key innovation, zero cost)
 - Claude Code does not refresh the keychain token while idle, so it
   eventually expires and the API returns 401. When the token is within
-  20 minutes of expiry, the refresher runs a one-shot headless
-  `claude -p ok` from `/tmp` so Claude Code uses its refresh token to renew
-  and write the new token back to the keychain — at negligible cost — after
-  which normal API polling resumes.
+  60 seconds of expiry, the refresher renews it directly via the OAuth
+  `refresh_token` grant (`platform.claude.com/v1/oauth/token`) and writes
+  the rotated tokens back to the keychain — updating only the three
+  `claudeAiOauth` fields and preserving everything else (including
+  `mcpOAuth`). This is a pure auth call with **zero quota cost** — no
+  prompt, no inference. The tight 60-second window avoids racing Claude
+  Code's own proactive 5-minute refresh while it's actively in use.
 
 #### Bridge layer (optional Claude Code statusLine)
 - `claude-gauge-statusline.py` can be wired in as a Claude Code

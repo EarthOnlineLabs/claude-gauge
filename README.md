@@ -30,7 +30,7 @@ Click it for the full breakdown: your current 5-hour window and this week's wind
 
 A usage gauge has to read your account, so *how* it does that matters more than any feature:
 
-- **Reads only your usage** — never your conversations, prompts, files, or code.
+- **Reads only your usage** — never your conversations, prompts, files, or code. (Most usage trackers read your `~/.claude` conversation logs to count usage; this one never does.)
 - **Talks only to Anthropic** — your token goes to Anthropic's own usage endpoint and nowhere else: no third-party servers, none of ours, no analytics.
 - **Open and auditable** — plain bash and python with no obfuscation; read it before you run it. Uninstalling removes everything and never touches your credentials.
 - **Tiny** — a small menu-bar script plus a light background refresh. That's the whole thing.
@@ -60,7 +60,7 @@ Now the menu bar updates instantly as you use Claude Code — all local, zero co
 ClaudeGauge is three small, independent pieces that talk only through files in `~/.cache/claude-gauge/`, so any one can fail without taking the others down:
 
 - **Render** — a [SwiftBar](https://github.com/swiftbar/SwiftBar) plugin that draws the number and the dropdown.
-- **Refresh** — a background job that fetches your usage from the same endpoint Claude Code's `/usage` uses, authenticating with the token Claude Code already keeps in your keychain. It **polls adaptively** — barely at all when you have headroom, faster as a limit approaches — to stay well clear of rate limits. It also **keeps itself alive**: that token expires while Claude Code is idle, so when it's about to, the refresher quietly has Claude Code renew it (a single one-token prompt, only when needed — it won't dent your quota). The gauge never goes dead.
+- **Refresh** — a background job that fetches your usage from the same endpoint Claude Code's `/usage` uses, authenticating with the token Claude Code already keeps in your keychain. It **polls adaptively** — barely at all when you have headroom, faster as a limit approaches — to stay well clear of rate limits. It also **keeps itself alive at zero cost**: that token expires while Claude Code is idle, so when it's about to, the refresher renews it with a direct OAuth refresh — an auth call that costs nothing against your quota, never a prompt or an inference. The gauge never goes dead.
 - **Bridge (optional)** — lets Claude Code hand its live usage numbers straight to the gauge, for the instant updates described above.
 
 On a MacBook with a notch, the menu-bar text is always kept short enough that the notch can't swallow it.

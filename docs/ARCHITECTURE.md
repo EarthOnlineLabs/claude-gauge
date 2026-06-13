@@ -51,7 +51,7 @@ ClaudeGauge 是一个 macOS 菜单栏小工具，**实时、状态感知地**显
   │ 数据层（LaunchAgent 30s） │                    │ 桥接层（CC statusLine 命令）  │
   │ claude-gauge-refresh.sh  │                    │ claude-gauge-statusline.py    │
   │  · 自适应节流决定是否 poll │                    │  · 解析 rate_limits           │
-  │  · token<20min 自愈续命   │                    │  · Unix 秒 → ISO 时间          │
+  │  · token 零额度自愈续命     │                    │  · Unix 秒 → ISO 时间          │
   │  · 原子写                 │                    │  · 回显一行 "◔ 5h x% · 周 y%" │
   │                          │                    │  · 原子级 json.dump 写        │
   └────────────┬─────────────┘                    └───────────────┬──────────────┘
@@ -203,26 +203,25 @@ Claude Code 的 OAuth token 存在 macOS 钥匙串里（服务名 `Claude Code-c
 
 ### 6.2 怎么做
 
-在数据层每次运行的最前面（`refresher/claude-gauge-refresh.sh:26-32`）：
+在数据层每次运行的最前面（`refresher/claude-gauge-refresh.sh`）：
 
 ```
-tk = token()                                   # 从钥匙串读当前 token
-if tk.expiresAt/1000 < now + 1200:             # 距过期 < 20 分钟
-    subprocess.run(["claude", "-p", "ok"],
-                   stdin=DEVNULL, capture_output=True,
-                   timeout=75, cwd="/tmp")       # headless 跑一次 CC
-    tk = token()                                # 续命后重新读
+blob = kc_read()                               # 从钥匙串读完整凭证 blob（含 mcpOAuth）
+tk = blob["claudeAiOauth"]
+if tk.expiresAt/1000 < now + 60:               # 距过期 ≤ 60 秒
+    new = refresh_oauth(blob)                  # OAuth refresh_token 换新 + 写回钥匙串
+    if new: tk = new                           # 续命成功就用新 token
 ```
 
 机制拆解：
 
-- **触发条件**：token 距过期 **< 20 分钟**（`1200` 秒）才续命，不是每次都跑——绝大多数情况下这个分支根本不进。
-- **续命动作**：从 `/tmp` 目录跑一次 headless 的 `claude -p ok`。`claude -p` 是 Claude Code 的 print 模式（一次性问答），问它一句 `ok` 就退出。CC 在启动时会用 **refresh token** 给 access token 续命，并把新 token 写回钥匙串——我们要的就是这个副作用。
-- **为什么从 `/tmp`**：在 `/tmp`（而非某个真实项目目录）运行，CC 不会加载项目的 `CLAUDE.md`、不会带项目上下文，context 极小，**成本极低**。我们只需要它"启动并刷新 token"这一个动作，不需要它真的干活。
-- **`stdin=DEVNULL` + `timeout=75`**：不给输入、最多等 75 秒，防止挂死。
-- **续命后重读**：`tk = token()` 拿到刷新后的新 token，后续 poll 用它。
+- **触发条件**：token 距过期 **≤ 60 秒**才续命。为什么卡这么晚？因为活跃使用时 Claude Code 会**提前 5 分钟**自己刷新 token，永远轮不到我们这个 60 秒窗口——这样就不会和 CC **抢着轮换** refresh token。只有 CC 闲置（没在跑、不会自刷新）时 token 才会逼近过期，由我们接手；此时没有活跃的 CC 进程，零竞态。
+- **续命动作**：用钥匙串里的 `refreshToken` 向 `https://platform.claude.com/v1/oauth/token` 发一次 POST（body `grant_type=refresh_token` + `refresh_token` + `client_id`，`Content-Type: application/json`），拿回新的 `access_token` / `refresh_token` / `expires_in`。这是一次**纯鉴权调用，不是模型推理，零额度消耗**——比早期版本用 `claude -p ok`（会消耗极小额度）干净。
+- **refresh_token 会轮换**：每次刷新服务端都会发一个新的 refresh token 并让旧的失效，所以**必须把新 token 写回钥匙串**，否则 CC 下次刷新拿着失效的旧 token 会被登出。
+- **写回只改 3 字段**：读出完整 blob，只更新 `claudeAiOauth` 的 `accessToken` / `refreshToken` / `expiresAt`，**完整保留 `mcpOAuth`（其它 MCP 服务器的 OAuth token）等其余内容**，用 `security add-generic-password -U` 原地更新（保留 ACL，CC 照样能读）。
+- **端点细节**：必须是 `platform.claude.com`，`console.anthropic.com/v1/oauth/token` 会返回 404；请求需带 `User-Agent`（缺了会被 Cloudflare 403）。
 
-续命之后，正常的节流 + poll 流程接着走（`:33` 起）。如果 token 已经彻底过期（`expiresAt/1000 < now`），脚本直接退出不发请求（`:37`），等下一轮 LaunchAgent 唤醒时再试续命。
+续命之后，正常的节流 + poll 流程接着走（`:33` 起）。如果 token 已彻底过期且续命也失败（例如 refresh token 本身失效、需要用户重新登录 CC），脚本直接退出不发请求（`:37`），菜单栏走"诚实陈旧"变灰，等用户下次用 CC 重新登录后自动恢复。
 
 ### 6.3 渲染层的独立兜底
 
@@ -395,7 +394,7 @@ open "swiftbar://refreshallplugins"
 
 ## 11. 依赖与安装
 
-**依赖**：macOS；SwiftBar（`brew install --cask swiftbar`）；已登录的 Claude Code（提供钥匙串 token + `claude` CLI 用于续命）；Pro/Max 订阅；系统自带 `python3`。
+**依赖**：macOS；SwiftBar（`brew install --cask swiftbar`）；已登录的 Claude Code（提供钥匙串 token 与 refresh token）；Pro/Max 订阅；系统自带 `python3`。
 
 **安装**：`git clone` 后 `./install.sh`。脚本会：检测/安装 SwiftBar → 解析 SwiftBar 插件目录 → 装三个组件 → 写并加载 LaunchAgent → `force` 拉一次首数据 → 提示可选的 statusLine 配置。
 
