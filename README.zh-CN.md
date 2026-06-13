@@ -101,7 +101,7 @@ SwiftBar 每 15 秒跑一次这个脚本。它**只负责渲染**：读取 `~/.c
 **安装**
 
 ```bash
-git clone https://github.com/earthonline/claude-gauge.git
+git clone https://github.com/EarthOnlineDev/claude-gauge.git
 cd claude-gauge
 ./install.sh
 ```

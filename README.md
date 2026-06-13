@@ -31,7 +31,7 @@ ClaudeGauge puts your Claude Code (Pro/Max) quota right in the menu bar. It show
 ## Install
 
 ```bash
-git clone https://github.com/earthonline/claude-gauge.git
+git clone https://github.com/EarthOnlineDev/claude-gauge.git
 cd claude-gauge
 ./install.sh
 ```

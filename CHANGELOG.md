@@ -83,4 +83,4 @@ pretending to be fresh.
   (leaves Claude Code credentials and data untouched). Cache lives in
   `~/.cache/claude-gauge/`.
 
-[0.1.0]: https://github.com/earthonline/claude-gauge/releases/tag/v0.1.0
+[0.1.0]: https://github.com/EarthOnlineDev/claude-gauge/releases/tag/v0.1.0
