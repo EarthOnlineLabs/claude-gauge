@@ -8,6 +8,17 @@
 <meta property="og:title" content="ClaudeGauge" />
 <meta property="og:description" content="Real-time, status-aware Claude Code usage in your macOS menu bar. Self-heals expired tokens. Never lies with stale data." />
 <meta property="og:type" content="website" />
+<script>
+  // Set language before first paint to avoid a flash of the wrong language.
+  (function(){
+    var saved;
+    try{ saved = localStorage.getItem('cg-lang'); }catch(e){}
+    var lang = (saved === 'en' || saved === 'zh')
+      ? saved
+      : ((navigator.language || '').toLowerCase().indexOf('zh') === 0 ? 'zh' : 'en');
+    document.documentElement.dataset.lang = lang;
+  })();
+</script>
 <style>
   :root{
     --ink:#1d1d1f;
@@ -270,6 +281,18 @@
   .foot-meta{font-size:13px;color:var(--ink-faint);line-height:1.7}
   .foot-meta a{color:var(--ink-soft);text-decoration:none}
   .foot-meta a:hover{text-decoration:underline}
+
+  /* ---------- language toggle ---------- */
+  .zh{display:none}
+  html[data-lang="zh"] .en{display:none}
+  html[data-lang="zh"] .zh{display:inline}
+  .lang-toggle{
+    font-size:13px;font-weight:600;color:var(--ink-soft);background:var(--card);
+    border:1px solid var(--line);border-radius:999px;padding:6px 13px;cursor:pointer;
+    font-family:var(--font);display:inline-flex;align-items:center;gap:6px;
+    transition:color .15s,border-color .15s;line-height:1;
+  }
+  .lang-toggle:hover{color:var(--ink);border-color:#d8d4cb}
 </style>
 </head>
 <body>
@@ -287,12 +310,13 @@
   <div class="wrap">
     <div class="brand"><svg class="dial"><use href="#dial"/></svg> ClaudeGauge</div>
     <div class="nav-links">
-      <a href="#features">Features</a>
-      <a href="#how">How it works</a>
-      <a href="#privacy">Privacy</a>
+      <a href="#features"><span class="en">Features</span><span class="zh">功能</span></a>
+      <a href="#how"><span class="en">How it works</span><span class="zh">工作原理</span></a>
+      <a href="#privacy"><span class="en">Privacy</span><span class="zh">隐私</span></a>
       <a class="nav-cta" href="#install">
-        <svg width="14" height="14"><use href="#dial"/></svg> Install
+        <svg width="14" height="14"><use href="#dial"/></svg> <span class="en">Install</span><span class="zh">安装</span>
       </a>
+      <button class="lang-toggle" id="langToggle" onclick="toggleLang()" aria-label="Switch language"><span class="en">中文</span><span class="zh">EN</span></button>
     </div>
   </div>
 </nav>
@@ -300,22 +324,22 @@
 <!-- ============ HERO ============ -->
 <header class="hero">
   <div class="wrap">
-    <span class="badge"><span class="dot"></span> macOS menu bar · Claude Code Pro / Max</span>
-    <h1>Your Claude Code usage,<br><span class="grad">live in the menu bar.</span></h1>
+    <span class="badge"><span class="dot"></span> <span class="en">macOS menu bar · Claude Code Pro / Max</span><span class="zh">macOS 菜单栏 · Claude Code Pro / Max</span></span>
+    <h1><span class="en">Your Claude Code usage,<br><span class="grad">live in the menu bar.</span></span><span class="zh">你的 Claude Code 用量，<br><span class="grad">常驻菜单栏。</span></span></h1>
     <p class="sub">
-      A tiny macOS gauge that shows how much of your Claude Code quota you've used —
-      real-time, status-aware, and never lying with stale data.
+      <span class="en">A tiny macOS gauge that shows how much of your Claude Code quota you've used —
+      real-time, status-aware, and never lying with stale data.</span><span class="zh">一个小巧的 macOS 表盘，瞟一眼就知道 Claude Code 额度还剩多少——实时、随状态变色，绝不拿过期数据糊弄你。</span>
     </p>
     <div class="hero-cta">
       <a class="btn btn-primary" href="#install">
-        <svg width="16" height="16"><use href="#dial"/></svg> Get started
+        <svg width="16" height="16"><use href="#dial"/></svg> <span class="en">Get started</span><span class="zh">开始使用</span>
       </a>
       <a class="btn btn-ghost" href="https://github.com/EarthOnlineDev/claude-gauge">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.34c-2.23.49-2.7-1.07-2.7-1.07-.36-.93-.89-1.18-.89-1.18-.73-.5.05-.49.05-.49.81.06 1.23.83 1.23.83.72 1.23 1.88.87 2.34.67.07-.52.28-.87.5-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.01.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.11.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
-        View on GitHub
+        <span class="en">View on GitHub</span><span class="zh">在 GitHub 上查看</span>
       </a>
     </div>
-    <p class="hero-note">Open source · MIT · reads only your usage, never your chats</p>
+    <p class="hero-note"><span class="en">Open source · MIT · reads only your usage, never your chats</span><span class="zh">开源 · MIT · 只读用量，绝不碰对话</span></p>
 
     <!-- mock window -->
     <div class="demo">
@@ -326,20 +350,20 @@
           <span class="mbg lit"><svg class="dial"><use href="#dial"/></svg> 49%
             <div class="popover">
               <div class="dropdown">
-                <div class="dd-head"><svg class="dial"><use href="#dial"/></svg> Claude Code usage</div>
+                <div class="dd-head"><svg class="dial"><use href="#dial"/></svg> <span class="en">Claude Code usage</span><span class="zh">Claude Code 用量</span></div>
                 <div class="dd-row">
-                  <div class="dd-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> Current 5-hour · session</div>
-                  <div class="dd-used">49%<span class="muted"> used&nbsp;&nbsp;·&nbsp;&nbsp;51% left</span></div>
+                  <div class="dd-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> <span class="en">Current 5-hour · session</span><span class="zh">当前 5 小时 · 会话</span></div>
+                  <div class="dd-used">49%<span class="muted"><span class="en"> used&nbsp;&nbsp;·&nbsp;&nbsp;51% left</span><span class="zh"> 已用&nbsp;&nbsp;·&nbsp;&nbsp;还剩 51%</span></span></div>
                   <div class="gaugebar">█████░░░░░</div>
-                  <div class="dd-reset">resets in 2h41m</div>
+                  <div class="dd-reset"><span class="en">resets in 2h41m</span><span class="zh">2h41m 后重置</span></div>
                 </div>
                 <div class="dd-row">
-                  <div class="dd-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg> This week · 7-day</div>
-                  <div class="dd-used">63%<span class="muted"> used&nbsp;&nbsp;·&nbsp;&nbsp;37% left</span></div>
+                  <div class="dd-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg> <span class="en">This week · 7-day</span><span class="zh">本周 · 7 天</span></div>
+                  <div class="dd-used">63%<span class="muted"><span class="en"> used&nbsp;&nbsp;·&nbsp;&nbsp;37% left</span><span class="zh"> 已用&nbsp;&nbsp;·&nbsp;&nbsp;还剩 37%</span></span></div>
                   <div class="gaugebar">██████░░░░</div>
-                  <div class="dd-reset">resets in 4d</div>
+                  <div class="dd-reset"><span class="en">resets in 4d</span><span class="zh">4d 后重置</span></div>
                 </div>
-                <div class="dd-foot"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7M21 3v6h-6"/></svg> Updated 21:04 (just now) · refresh now</div>
+                <div class="dd-foot"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7M21 3v6h-6"/></svg> <span class="en">Updated 21:04 (just now) · refresh now</span><span class="zh">更新于 21:04（刚刚）· 立即刷新</span></div>
               </div>
             </div>
           </span>
@@ -354,7 +378,7 @@
 
     <!-- one number, three colors -->
     <div class="threecolors">
-      <p class="tc-lead"><b>One number, three colors — it follows your intuition.</b> When you're fine you just see one number (above). As a window fills up it surfaces on its own — amber, then red — with the countdown you'd want. Here's the real thing:</p>
+      <p class="tc-lead"><span class="en"><b>One number, three colors — it follows your intuition.</b> When you're fine you just see one number (above). As a window fills up it surfaces on its own — amber, then red — with the countdown you'd want. Here's the real thing:</span><span class="zh"><b>一个数字，三种颜色——跟着你的直觉走。</b>宽裕时你只看到一个数字（上图）。某个窗口快满了，它自己冒出来——先橙后红——还带上你想要的重置倒计时。看看真实效果：</span></p>
       <div class="states2">
 
         <div>
@@ -367,23 +391,23 @@
             </div>
             <div class="mini-stage">
               <div class="dropdown">
-                <div class="dd-head"><svg class="dial"><use href="#dial"/></svg> Claude Code usage</div>
+                <div class="dd-head"><svg class="dial"><use href="#dial"/></svg> <span class="en">Claude Code usage</span><span class="zh">Claude Code 用量</span></div>
                 <div class="dd-row">
-                  <div class="dd-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> Current 5-hour · session</div>
-                  <div class="dd-used warn">82%<span class="muted"> used&nbsp;·&nbsp;18% left</span></div>
+                  <div class="dd-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> <span class="en">Current 5-hour · session</span><span class="zh">当前 5 小时 · 会话</span></div>
+                  <div class="dd-used warn">82%<span class="muted"><span class="en"> used&nbsp;·&nbsp;18% left</span><span class="zh"> 已用&nbsp;·&nbsp;还剩 18%</span></span></div>
                   <div class="gaugebar warn">████████░░</div>
-                  <div class="dd-reset">resets in 38m</div>
+                  <div class="dd-reset"><span class="en">resets in 38m</span><span class="zh">38m 后重置</span></div>
                 </div>
                 <div class="dd-row">
-                  <div class="dd-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg> This week · 7-day</div>
-                  <div class="dd-used">41%<span class="muted"> used&nbsp;·&nbsp;59% left</span></div>
+                  <div class="dd-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg> <span class="en">This week · 7-day</span><span class="zh">本周 · 7 天</span></div>
+                  <div class="dd-used">41%<span class="muted"><span class="en"> used&nbsp;·&nbsp;59% left</span><span class="zh"> 已用&nbsp;·&nbsp;还剩 59%</span></span></div>
                   <div class="gaugebar">████░░░░░░</div>
-                  <div class="dd-reset">resets in 5d</div>
+                  <div class="dd-reset"><span class="en">resets in 5d</span><span class="zh">5d 后重置</span></div>
                 </div>
               </div>
             </div>
           </div>
-          <p class="scene-cap"><b>Heads up (≥75%)</b> — the 5-hour window is the one biting.</p>
+          <p class="scene-cap"><span class="en"><b>Heads up (≥75%)</b> — the 5-hour window is the one biting.</span><span class="zh"><b>留意（≥75%）</b>——咬人的是 5 小时窗口。</span></p>
         </div>
 
         <div>
@@ -396,23 +420,23 @@
             </div>
             <div class="mini-stage">
               <div class="dropdown">
-                <div class="dd-head"><svg class="dial"><use href="#dial"/></svg> Claude Code usage</div>
+                <div class="dd-head"><svg class="dial"><use href="#dial"/></svg> <span class="en">Claude Code usage</span><span class="zh">Claude Code 用量</span></div>
                 <div class="dd-row">
-                  <div class="dd-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> Current 5-hour · session</div>
-                  <div class="dd-used">58%<span class="muted"> used&nbsp;·&nbsp;42% left</span></div>
+                  <div class="dd-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> <span class="en">Current 5-hour · session</span><span class="zh">当前 5 小时 · 会话</span></div>
+                  <div class="dd-used">58%<span class="muted"><span class="en"> used&nbsp;·&nbsp;42% left</span><span class="zh"> 已用&nbsp;·&nbsp;还剩 42%</span></span></div>
                   <div class="gaugebar">██████░░░░</div>
-                  <div class="dd-reset">resets in 1h20m</div>
+                  <div class="dd-reset"><span class="en">resets in 1h20m</span><span class="zh">1h20m 后重置</span></div>
                 </div>
                 <div class="dd-row">
-                  <div class="dd-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg> This week · 7-day</div>
-                  <div class="dd-used crit">93%<span class="muted"> used&nbsp;·&nbsp;7% left</span></div>
+                  <div class="dd-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg> <span class="en">This week · 7-day</span><span class="zh">本周 · 7 天</span></div>
+                  <div class="dd-used crit">93%<span class="muted"><span class="en"> used&nbsp;·&nbsp;7% left</span><span class="zh"> 已用&nbsp;·&nbsp;还剩 7%</span></span></div>
                   <div class="gaugebar crit">█████████░</div>
-                  <div class="dd-reset">resets in 2d</div>
+                  <div class="dd-reset"><span class="en">resets in 2d</span><span class="zh">2d 后重置</span></div>
                 </div>
               </div>
             </div>
           </div>
-          <p class="scene-cap"><b>Critical (≥90%)</b> — the weekly wall preempts; it's the hard limit.</p>
+          <p class="scene-cap"><span class="en"><b>Critical (≥90%)</b> — the weekly wall preempts; it's the hard limit.</span><span class="zh"><b>告急（≥90%）</b>——一周硬墙优先冒头；这是真正的上限。</span></p>
         </div>
 
       </div>
@@ -424,41 +448,41 @@
 <section id="privacy" class="privacy">
   <div class="wrap">
     <div class="sec-head">
-      <span class="eyebrow">What it can and can't see</span>
-      <h2>Built to be auditable</h2>
-      <p>It's all readable bash and Python — nothing obfuscated, nothing hidden.</p>
+      <span class="eyebrow"><span class="en">What it can and can't see</span><span class="zh">它能看到什么，看不到什么</span></span>
+      <h2><span class="en">Built to be auditable</span><span class="zh">天生可审计</span></h2>
+      <p><span class="en">It's all readable bash and Python — nothing obfuscated, nothing hidden.</span><span class="zh">全是能读懂的 bash 和 Python——没有混淆，没有藏私。</span></p>
     </div>
     <div class="priv-grid">
 
       <div class="priv">
         <span class="pico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 4 6v5c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6Z"/><path d="m9 12 2 2 4-4"/></svg></span>
         <div>
-          <h3>Token-only access</h3>
-          <p>Reads one OAuth token from the keychain entry <code>Claude Code-credentials</code> and sends it only to Anthropic, only to fetch usage.</p>
+          <h3><span class="en">Token-only access</span><span class="zh">只取 token</span></h3>
+          <p><span class="en">Reads one OAuth token from the keychain entry <code>Claude Code-credentials</code> and sends it only to Anthropic, only to fetch usage.</span><span class="zh">只从钥匙串条目 <code>Claude Code-credentials</code> 读取一个 OAuth token，且只发往 Anthropic，只用来拉取用量。</span></p>
         </div>
       </div>
 
       <div class="priv">
         <span class="pico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><path d="m4 4 16 16"/></svg></span>
         <div>
-          <h3>Never reads your chats</h3>
-          <p>It never opens <code>~/.claude/projects</code>, your conversation logs, or any code file. Usage numbers only.</p>
+          <h3><span class="en">Never reads your chats</span><span class="zh">绝不读你的对话</span></h3>
+          <p><span class="en">It never opens <code>~/.claude/projects</code>, your conversation logs, or any code file. Usage numbers only.</span><span class="zh">绝不打开 <code>~/.claude/projects</code>、你的对话记录或任何代码文件。只看用量数字。</span></p>
         </div>
       </div>
 
       <div class="priv">
         <span class="pico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18-6-6 6-6M15 6l6 6-6 6"/></svg></span>
         <div>
-          <h3>Open &amp; auditable</h3>
-          <p>Three short scripts in plain bash and Python — no minification, no binaries, no telemetry. Read every line before you run it.</p>
+          <h3><span class="en">Open &amp; auditable</span><span class="zh">开源、能审</span></h3>
+          <p><span class="en">Three short scripts in plain bash and Python — no minification, no binaries, no telemetry. Read every line before you run it.</span><span class="zh">三个简短的脚本，纯 bash 和 Python——不压缩、无二进制、零埋点。跑之前每一行你都能读。</span></p>
         </div>
       </div>
 
       <div class="priv">
         <span class="pico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11V7a3 3 0 0 1 6 0v4M5 11h14v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1Z"/></svg></span>
         <div>
-          <h3>MIT licensed</h3>
-          <p>Free to use, fork, and modify. Uninstall leaves your Claude Code credentials and data completely untouched.</p>
+          <h3><span class="en">MIT licensed</span><span class="zh">MIT 许可</span></h3>
+          <p><span class="en">Free to use, fork, and modify. Uninstall leaves your Claude Code credentials and data completely untouched.</span><span class="zh">可自由使用、fork 和修改。卸载时绝不动你的 Claude Code 凭证和数据。</span></p>
         </div>
       </div>
 
@@ -470,9 +494,9 @@
 <section id="install" style="background:#fff;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)">
   <div class="wrap">
     <div class="sec-head">
-      <span class="eyebrow">Get it running</span>
-      <h2>Two commands and you're done</h2>
-      <p>Clone the repo and run the installer. It handles SwiftBar, the background refresher, and the first data pull.</p>
+      <span class="eyebrow"><span class="en">Get it running</span><span class="zh">让它跑起来</span></span>
+      <h2><span class="en">Two commands and you're done</span><span class="zh">两条命令就搞定</span></h2>
+      <p><span class="en">Clone the repo and run the installer. It handles SwiftBar, the background refresher, and the first data pull.</span><span class="zh">克隆仓库，运行安装脚本。SwiftBar、后台刷新器和首次拉取数据，它全包了。</span></p>
     </div>
     <div class="install-wrap">
       <div class="code">
@@ -484,21 +508,21 @@
             <span id="copyTxt">Copy</span>
           </button>
         </div>
-        <pre><code id="installCode"><span class="c-cmt"># clone and install — macOS only</span>
+        <pre><code id="installCode"><span class="c-cmt"># <span class="en">clone and install — macOS only</span><span class="zh">克隆并安装 —— 仅限 macOS</span></span>
 <span class="c-cmd">git clone</span> <span class="c-arg">https://github.com/EarthOnlineDev/claude-gauge.git</span>
 <span class="c-cmd">cd</span> <span class="c-arg">claude-gauge && ./install.sh</span></code></pre>
       </div>
 
       <div class="install-steps">
-        <span class="step-chip"><b>1.</b> Installs SwiftBar via Homebrew</span>
-        <span class="step-chip"><b>2.</b> Loads a 30s background refresher</span>
-        <span class="step-chip"><b>3.</b> Pulls your first reading</span>
+        <span class="step-chip"><b>1.</b> <span class="en">Installs SwiftBar via Homebrew</span><span class="zh">用 Homebrew 装好 SwiftBar</span></span>
+        <span class="step-chip"><b>2.</b> <span class="en">Loads a 30s background refresher</span><span class="zh">加载一个 30 秒后台刷新器</span></span>
+        <span class="step-chip"><b>3.</b> <span class="en">Pulls your first reading</span><span class="zh">拉取你的第一份读数</span></span>
       </div>
 
       <p class="install-note">
-        Needs macOS, a signed-in Claude Code with a Pro/Max subscription, and system <code>python3</code>.
+        <span class="en">Needs macOS, a signed-in Claude Code with a Pro/Max subscription, and system <code>python3</code>.
         Optional: point Claude Code's <code>statusLine</code> at the bridge for zero-cost instant updates while you work.
-        Uninstall anytime with <code>./uninstall.sh</code> — it never touches your Claude Code credentials or data.
+        Uninstall anytime with <code>./uninstall.sh</code> — it never touches your Claude Code credentials or data.</span><span class="zh">需要 macOS、已登录且拥有 Pro/Max 订阅的 Claude Code，以及系统自带的 <code>python3</code>。可选：把 Claude Code 的 <code>statusLine</code> 指向桥接脚本，干活时零成本即时刷新。随时用 <code>./uninstall.sh</code> 卸载——绝不动你的 Claude Code 凭证和数据。</span>
       </p>
     </div>
   </div>
@@ -508,31 +532,31 @@
 <section id="how">
   <div class="wrap">
     <div class="sec-head">
-      <span class="eyebrow">How it works</span>
-      <h2>Three small layers</h2>
-      <p>Each does one job. The render layer never touches the network when the background layer is healthy.</p>
+      <span class="eyebrow"><span class="en">How it works</span><span class="zh">工作原理</span></span>
+      <h2><span class="en">Three small layers</span><span class="zh">三个小分层</span></h2>
+      <p><span class="en">Each does one job. The render layer never touches the network when the background layer is healthy.</span><span class="zh">每层只干一件事。后台层健康时，渲染层从不碰网络。</span></p>
     </div>
     <div class="how-grid">
 
       <div class="layer">
-        <div class="num">01 <span class="bar"></span> RENDER</div>
-        <h3>The gauge</h3>
+        <div class="num">01 <span class="bar"></span> <span class="en">RENDER</span><span class="zh">渲染</span></div>
+        <h3><span class="en">The gauge</span><span class="zh">表盘</span></h3>
         <span class="tag">plugin/claude-gauge.15s.sh</span>
-        <p>A SwiftBar plugin that wakes every 15 seconds, reads whichever of <code>live.json</code> or <code>cache.json</code> is newer, and draws the status-aware title and dropdown. Pure rendering — no secrets, no API calls in the happy path.</p>
+        <p><span class="en">A SwiftBar plugin that wakes every 15 seconds, reads whichever of <code>live.json</code> or <code>cache.json</code> is newer, and draws the status-aware title and dropdown. Pure rendering — no secrets, no API calls in the happy path.</span><span class="zh">一个 SwiftBar 插件，每 15 秒醒来一次，读取 <code>live.json</code> 和 <code>cache.json</code> 中较新的那个，绘制随状态变色的标题和下拉。纯渲染——正常路径下不碰任何密钥，不发任何 API 请求。</span></p>
       </div>
 
       <div class="layer">
-        <div class="num">02 <span class="bar"></span> DATA</div>
-        <h3>The refresher</h3>
+        <div class="num">02 <span class="bar"></span> <span class="en">DATA</span><span class="zh">数据</span></div>
+        <h3><span class="en">The refresher</span><span class="zh">刷新器</span></h3>
         <span class="tag">refresher/claude-gauge-refresh.sh</span>
-        <p>A LaunchAgent (<code>dev.earthonline.claude-gauge</code>) fires every 30s and adaptively throttles — 45s when critical, 240s when idle to dodge <code>429</code>s. It polls the usage API, atomically writes the cache, self-heals the token, and sends threshold notifications.</p>
+        <p><span class="en">A LaunchAgent (<code>dev.earthonline.claude-gauge</code>) fires every 30s and adaptively throttles — 45s when critical, 240s when idle to dodge <code>429</code>s. It polls the usage API, atomically writes the cache, self-heals the token, and sends threshold notifications.</span><span class="zh">一个 LaunchAgent（<code>dev.earthonline.claude-gauge</code>）每 30 秒触发一次，并自适应节流——告急时 45 秒，闲置时 240 秒，以躲开 <code>429</code> 限流。它轮询用量 API，原子地写入缓存，自动给 token 续命，并在跨过阈值时发送通知。</span></p>
       </div>
 
       <div class="layer">
-        <div class="num">03 <span class="bar"></span> BRIDGE <span class="opt-badge">optional</span></div>
-        <h3>The statusLine</h3>
+        <div class="num">03 <span class="bar"></span> <span class="en">BRIDGE</span><span class="zh">桥接</span> <span class="opt-badge"><span class="en">optional</span><span class="zh">可选</span></span></div>
+        <h3><span class="en">The statusLine</span><span class="zh">statusLine 桥接</span></h3>
         <span class="tag">bridge/claude-gauge-statusline.py</span>
-        <p>Wired as Claude Code's <code>statusLine</code> command, it reads the rate limits CC already hands its status bar and writes <code>live.json</code> — so the menu bar updates instantly while you work, with no API call and no token needed. Applies to new sessions started after you configure it.</p>
+        <p><span class="en">Wired as Claude Code's <code>statusLine</code> command, it reads the rate limits CC already hands its status bar and writes <code>live.json</code> — so the menu bar updates instantly while you work, with no API call and no token needed. Applies to new sessions started after you configure it.</span><span class="zh">作为 Claude Code 的 <code>statusLine</code> 命令接入，它读取 CC 已经喂给自己状态栏的限额，写入 <code>live.json</code>——这样你干活时菜单栏即时更新，无需任何 API 请求，也不用 token。只对配置之后新开的会话生效。</span></p>
       </div>
 
     </div>
@@ -543,40 +567,40 @@
 <section id="features">
   <div class="wrap">
     <div class="sec-head">
-      <span class="eyebrow">Why it's different</span>
-      <h2>Small, honest, and out of your way</h2>
-      <p>It only speaks up when it matters — and when it does, it tells the truth.</p>
+      <span class="eyebrow"><span class="en">Why it's different</span><span class="zh">它有何不同</span></span>
+      <h2><span class="en">Small, honest, and out of your way</span><span class="zh">小巧、诚实、不挡道</span></h2>
+      <p><span class="en">It only speaks up when it matters — and when it does, it tells the truth.</span><span class="zh">只在要紧时出声——出声时，说的都是实话。</span></p>
     </div>
     <div class="feat-grid">
 
       <div class="feat">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3.5 17.5a9 9 0 1 1 17 0"/><path d="M12 17.5 16.2 9.8"/><circle cx="12" cy="17.5" r="1.8" fill="currentColor"/></svg></span>
-        <h3>Status-aware minimalism</h3>
-        <p>When you have headroom it's silent — just the current 5-hour percentage, auto black/white to match your menu bar. Cross a threshold and it surfaces the window that's actually biting, with a color and a reset countdown.</p>
+        <h3><span class="en">Status-aware minimalism</span><span class="zh">随状态变色的极简主义</span></h3>
+        <p><span class="en">When you have headroom it's silent — just the current 5-hour percentage, auto black/white to match your menu bar. Cross a threshold and it surfaces the window that's actually biting, with a color and a reset countdown.</span><span class="zh">宽裕时它安静无声——只显示当前 5 小时窗口的百分比，自动黑白配色匹配你的菜单栏。跨过阈值，它就把真正告急的那个窗口冒出来，带上颜色和重置倒计时。</span></p>
       </div>
 
       <div class="feat">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/><path d="M12 8v4l2.5 1.5"/></svg></span>
-        <h3>Self-healing tokens</h3>
-        <p>Claude Code doesn't refresh its keychain token while idle, so the usage API starts returning <code>401</code>. ClaudeGauge spots a near-expired token and runs one tiny headless <code>claude -p ok</code> from <code>/tmp</code> to renew it — so the gauge keeps working even when you've stepped away.</p>
+        <h3><span class="en">Self-healing tokens</span><span class="zh">token 自动续命</span></h3>
+        <p><span class="en">Claude Code doesn't refresh its keychain token while idle, so the usage API starts returning <code>401</code>. ClaudeGauge spots a near-expired token and runs one tiny headless <code>claude -p ok</code> from <code>/tmp</code> to renew it — so the gauge keeps working even when you've stepped away.</span><span class="zh">Claude Code 闲置时不会刷新钥匙串里的 token，于是用量 API 开始返回 <code>401</code>。ClaudeGauge 发现 token 快过期，就在 <code>/tmp</code> 里跑一条极小的无头命令 <code>claude -p ok</code> 把它续上——这样你离开座位时，表盘照样工作。</span></p>
       </div>
 
       <div class="feat">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.1a2 2 0 0 1 3.4 0l8 13.9a2 2 0 0 1-1.7 3H3.9a2 2 0 0 1-1.7-3Z"/><path d="M12 9v4M12 17h.01"/></svg></span>
-        <h3>Honestly stale</h3>
-        <p>If data is more than 15 minutes old, the title goes gray and grows a <code>~</code>, and the dropdown warns you. No tool lies to you with old numbers dressed up as live — ever.</p>
+        <h3><span class="en">Honestly stale</span><span class="zh">过期就老实说</span></h3>
+        <p><span class="en">If data is more than 15 minutes old, the title goes gray and grows a <code>~</code>, and the dropdown warns you. No tool lies to you with old numbers dressed up as live — ever.</span><span class="zh">数据超过 15 分钟没刷新，标题就变灰、长出一个 <code>~</code>，下拉里也会提醒你。绝不拿过期数字伪装成实时来糊弄你——永远不会。</span></p>
       </div>
 
       <div class="feat">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M9 4v3a3 3 0 0 0 6 0V4"/></svg></span>
-        <h3>Notch-friendly</h3>
-        <p>On notched Macs the menu bar title stays under ~90px (about 11 characters). Go wider and the notch swallows your icon whole — so the display is engineered to stay short no matter the state.</p>
+        <h3><span class="en">Notch-friendly</span><span class="zh">刘海友好</span></h3>
+        <p><span class="en">On notched Macs the menu bar title stays under ~90px (about 11 characters). Go wider and the notch swallows your icon whole — so the display is engineered to stay short no matter the state.</span><span class="zh">带刘海的 Mac 上，菜单栏标题始终压在约 90px（约 11 个字符）以内。再宽一点，刘海就会把你的图标整个吞掉——所以无论什么状态，显示都被刻意控制得够短。</span></p>
       </div>
 
       <div class="feat">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
-        <h3>Knows before you do</h3>
-        <p>A background agent polls on an adaptive schedule and fires a native macOS notification the moment you cross 75% or 90% — once per window, per cycle, so it nudges without nagging.</p>
+        <h3><span class="en">Knows before you do</span><span class="zh">比你先知道</span></h3>
+        <p><span class="en">A background agent polls on an adaptive schedule and fires a native macOS notification the moment you cross 75% or 90% — once per window, per cycle, so it nudges without nagging.</span><span class="zh">一个后台任务按自适应节奏轮询，在你刚跨过 75% 或 90% 的那一刻，弹出原生 macOS 通知——每个窗口、每个周期只提醒一次，点到为止，绝不唠叨。</span></p>
       </div>
 
     </div>
@@ -592,13 +616,14 @@
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.34c-2.23.49-2.7-1.07-2.7-1.07-.36-.93-.89-1.18-.89-1.18-.73-.5.05-.49.05-.49.81.06 1.23.83 1.23.83.72 1.23 1.88.87 2.34.67.07-.52.28-.87.5-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.01.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.11.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
         GitHub
       </a>
-      <a href="#features">Features</a>
-      <a href="#install">Install</a>
-      <a href="#privacy">Privacy</a>
+      <a href="#features"><span class="en">Features</span><span class="zh">功能</span></a>
+      <a href="#install"><span class="en">Install</span><span class="zh">安装</span></a>
+      <a href="#privacy"><span class="en">Privacy</span><span class="zh">隐私</span></a>
     </div>
     <p class="foot-meta">
-      MIT License · built by <a href="https://github.com/earthonline">EarthOnline</a><br>
-      ClaudeGauge is an independent tool and is not affiliated with Anthropic.
+      <span class="en">MIT License · built by <a href="https://github.com/earthonline">EarthOnline</a><br>
+      ClaudeGauge is an independent tool and is not affiliated with Anthropic.</span><span class="zh">MIT 许可证 · 由 <a href="https://github.com/earthonline">EarthOnline</a> 打造<br>
+      ClaudeGauge 是独立工具，与 Anthropic 无任何关联。</span>
     </p>
   </div>
 </footer>
@@ -620,6 +645,13 @@
       try{document.execCommand('copy');}catch(e){}
       document.body.removeChild(ta); done();
     }
+  }
+
+  // ---- language switch (detection runs in <head> before first paint) ----
+  function toggleLang(){
+    var next = document.documentElement.dataset.lang === 'zh' ? 'en' : 'zh';
+    document.documentElement.dataset.lang = next;
+    try{ localStorage.setItem('cg-lang', next); }catch(e){}
   }
 </script>
 
