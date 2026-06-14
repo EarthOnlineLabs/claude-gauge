@@ -78,7 +78,18 @@
     display:inline-flex;align-items:center;gap:7px;transition:transform .12s,opacity .15s;
   }
   .nav-cta:hover{opacity:.88;transform:translateY(-1px)}
-  @media(max-width:640px){.nav-links a:not(.nav-cta){display:none}}
+  .nav-ghost{
+    font-size:14px;font-weight:600;padding:7px 14px;border-radius:999px;
+    background:var(--card);color:var(--ink-soft) !important;text-decoration:none;
+    border:1px solid var(--line);display:inline-flex;align-items:center;gap:7px;
+    transition:color .15s,border-color .15s,transform .12s;
+  }
+  .nav-ghost:hover{color:var(--ink) !important;border-color:#d8d4cb;transform:translateY(-1px)}
+  @media(max-width:640px){
+    .nav-links{gap:11px}
+    .nav-ghost{padding:7px 10px}
+    .nav-ghost .ghost-tx{display:none}
+  }
 
   /* ---------- hero ---------- */
   .hero{padding:88px 0 40px;text-align:center}
@@ -279,6 +290,7 @@
   .foot-meta{font-size:13px;color:var(--ink-faint);line-height:1.7}
   .foot-meta a{color:var(--ink-soft);text-decoration:none}
   .foot-meta a:hover{text-decoration:underline}
+  .eo-mark{width:20px;height:11.2px;vertical-align:middle;margin:0 3px}
 
   /* ---------- language toggle ---------- */
   .zh{display:none}
@@ -313,15 +325,27 @@
     <circle cx="12" cy="12" r="10" fill="#e7f1ec"/>
     <path d="m7.8 12.3 2.7 2.7L16.2 9.2" fill="none" stroke="#3a8f63" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
   </symbol>
+  <!-- EarthOnline mark: locked v0.6 spectrum ∞ (purple→blue→green→orange→red) -->
+  <linearGradient id="eoSpectrum" x1="16" y1="0" x2="84" y2="0" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#8A43E6"/><stop offset=".2" stop-color="#8A43E6"/>
+    <stop offset=".2" stop-color="#4FA8F0"/><stop offset=".4" stop-color="#4FA8F0"/>
+    <stop offset=".4" stop-color="#1FA45D"/><stop offset=".6" stop-color="#1FA45D"/>
+    <stop offset=".6" stop-color="#F4811E"/><stop offset=".8" stop-color="#F4811E"/>
+    <stop offset=".8" stop-color="#E8482A"/><stop offset="1" stop-color="#E8482A"/>
+  </linearGradient>
+  <symbol id="eo-mark" viewBox="0 0 100 56">
+    <path d="M50 28 C 42 15, 18 15, 18 28 C 18 41, 42 41, 50 28 C 58 15, 82 15, 82 28 C 82 41, 58 41, 50 28 Z" fill="none" stroke="url(#eoSpectrum)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
 </svg>
 
 <nav>
   <div class="wrap">
     <div class="brand"><svg class="dial"><use href="#dial"/></svg> ClaudeGauge</div>
     <div class="nav-links">
-      <a href="#features"><span class="en">Features</span><span class="zh">功能</span></a>
-      <a href="#how"><span class="en">How it works</span><span class="zh">工作原理</span></a>
-      <a href="#privacy"><span class="en">Privacy</span><span class="zh">隐私</span></a>
+      <a class="nav-ghost" href="https://github.com/EarthOnlineDev/claude-gauge">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.34c-2.23.49-2.7-1.07-2.7-1.07-.36-.93-.89-1.18-.89-1.18-.73-.5.05-.49.05-.49.81.06 1.23.83 1.23.83.72 1.23 1.88.87 2.34.67.07-.52.28-.87.5-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.01.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.11.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        <span class="ghost-tx">GitHub</span>
+      </a>
       <a class="nav-cta" href="#install">
         <svg width="14" height="14"><use href="#dial"/></svg> <span class="en">Install</span><span class="zh">安装</span>
       </a>
@@ -627,8 +651,8 @@
       <a href="#privacy"><span class="en">Privacy</span><span class="zh">隐私</span></a>
     </div>
     <p class="foot-meta">
-      <span class="en">MIT License · built by <a href="https://github.com/EarthOnlineDev">EarthOnline</a><br>
-      ClaudeGauge is an independent tool and is not affiliated with Anthropic.</span><span class="zh">MIT 许可证 · 由 <a href="https://github.com/EarthOnlineDev">EarthOnline</a> 打造<br>
+      <span class="en">MIT License · built by <svg class="eo-mark" aria-label="EarthOnline"><use href="#eo-mark"/></svg> <a href="https://github.com/EarthOnlineDev">EarthOnline</a><br>
+      ClaudeGauge is an independent tool and is not affiliated with Anthropic.</span><span class="zh">MIT 许可证 · 由 <svg class="eo-mark" aria-label="EarthOnline"><use href="#eo-mark"/></svg> <a href="https://github.com/EarthOnlineDev">EarthOnline</a> 打造<br>
       ClaudeGauge 是独立工具，与 Anthropic 无任何关联。</span>
     </p>
   </div>
