@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # ClaudeGauge 完成提醒层（可选 / opt-in）安装器。
-# 它做两件事：① 装 alert 脚本到 ~/.claude；② 把 Stop + Notification(permission_prompt) hook
+# 它做两件事：① 装 alert 脚本到 ~/.claude；② 把 Stop + PermissionRequest + Notification 三条 hook
 # 幂等合并进 ~/.claude/settings.json（改前必先备份、改后校验、原子写、绝不动你已有的 hooks）。
+# 触发点：Stop=回合完成；PermissionRequest=需要你授权(桌面端真实触发点)；Notification=终端模式的授权/idle 通知(桌面端不发)。
 #
 # 这是唯一会自动改 settings.json 的入口——主 install.sh/uninstall.sh 都不碰它，保持克制。
 # 卸载：alert/install-alerts.sh --uninstall
@@ -28,7 +29,7 @@ hooks=cfg.get("hooks")
 if not isinstance(hooks,dict):
     print("  无 hooks 段，无需处理。"); sys.exit(0)
 changed=False
-for event in ("Stop","Notification"):
+for event in ("Stop","Notification","PermissionRequest"):
     arr=hooks.get(event)
     if not isinstance(arr,list): continue
     new=[]
@@ -64,7 +65,7 @@ mkdir -p "$HOME/.claude" "$HOME/.cache/claude-gauge"
 install -m 0755 "$REPO/alert/claude-gauge-alert.py" "$HOME/.claude/claude-gauge-alert.py"
 ok "alert 脚本 → ~/.claude/claude-gauge-alert.py"
 
-say "把 Stop + Notification(permission_prompt) hook 幂等合并进 settings.json（先备份）"
+say "把 Stop + PermissionRequest + Notification hook 幂等合并进 settings.json（先备份）"
 /usr/bin/python3 - <<'PY'
 import json, os, shutil, sys, time
 HOME=os.path.expanduser("~")
@@ -104,7 +105,8 @@ def add(event, entry):
     arr.append(entry); print(f"  {event}: 已追加")
 
 add("Stop", {"hooks":[{"type":"command","command":STOP_CMD}]})
-add("Notification", {"matcher":"permission_prompt","hooks":[{"type":"command","command":NOTIF_CMD}]})
+add("Notification", {"matcher":"permission_prompt","hooks":[{"type":"command","command":NOTIF_CMD}]})  # 终端模式的授权/idle 通知；桌面端结构性不发，无害保留(给终端用户)
+add("PermissionRequest", {"hooks":[{"type":"command","command":NOTIF_CMD}]})                            # 桌面端授权弹窗的真实触发点：实测可触发，且仅真请求授权时触发、自动放行的工具不触发(已验证无噪音)
 
 out=json.dumps(cfg, indent=2, ensure_ascii=False); json.loads(out)   # 回解析校验
 tmp=P+".tmp"; open(tmp,"w").write(out+"\n"); os.replace(tmp,P)
