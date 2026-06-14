@@ -99,7 +99,8 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 
 **产品已完成、已开源、已部署，可直接交接。**
 
-- **线上落地页**：https://claude-gauge.earthonline.site （HTTP 200）。已按 **EarthOnline / AISelf v0.6 设计语言换皮**（宋体/Fraunces 衬线 + 光谱点缀），字体**自托管、零第三方请求**。形态与**发布流程见 §9**（注意：部署必须带上 `site/fonts/`）。
+- **线上落地页**：https://claude-gauge.earthonline.site （HTTP 200）。已按 **EarthOnline / AISelf v0.6 设计语言换皮**（宋体/Fraunces 衬线 + 光谱点缀），字体**自托管、零第三方请求**。形态与**发布流程见 §9**（注意：部署必须带上 `site/fonts/` + `site/favicon.*`）。
+  - **品牌 logo（新增，2026-06）**：分段光谱**仪表盘** logo（内联 SVG `#logo`，∞ 标记的「仪表」同胞），上导航品牌 + 页脚品牌 + favicon 均已用；README（双语）顶部加 `<picture>` logo（明暗主题切 PNG）。**菜单栏 mock 仍单色 `#dial`**（演示变色卖点，未动）。资产见 §8、细节见 §9.1。⚠️ **logo 改动尚未发布**——下次 deploy 才会上线（带上 `site/favicon.*`）。
 - **开源仓库**：https://github.com/EarthOnlineDev/claude-gauge （PUBLIC，`HEAD == origin/main`，工作区干净已推送）
 - **运行时**：launchd 任务 `dev.earthonline.claude-gauge` 已加载运行；`~/.cache/claude-gauge/cache.json` 数据新鲜；SwiftBar 插件已装。
 - **安装一致性**：三个已安装文件与 repo **字节级一致**（经审计 `diff` 零差异）。
@@ -223,6 +224,8 @@ cat ~/.cache/claude-gauge/live.json
 | `site/index.html` | 落地页（单文件静态站，EarthOnline 换皮；发布见 §9） |
 | `site/fonts/*.woff2` | 落地页自托管字体（Fraunces / JetBrains Mono / Noto Serif SC 子集；零第三方） |
 | `site/vercel.json` | 落地页 Vercel 配置（安全 headers / cleanUrls） |
+| `site/favicon.svg` / `site/favicon.png` | 落地页 favicon：分段光谱仪表盘 logo 置于白色圆角芯片（SVG 主用，PNG 兜底/apple-touch；发布必带，见 §9.3） |
+| `docs/logo.svg` / `docs/logo.png` / `docs/logo-dark.png` | **品牌 logo**：分段光谱仪表盘（EarthOnline ∞ 标记的「仪表」同胞）。SVG 为矢量源；README 用 `<picture>` 按明暗主题切 PNG（深色用 `logo-dark.png`，浅针变浅） |
 | `docs/screenshots/menubar.png` | 菜单栏截图 |
 | `~/.cache/claude-gauge/cache.json` | 后台 API 数据（权威） |
 | `~/.cache/claude-gauge/live.json` | CC 桥接即时数据 |
@@ -239,6 +242,7 @@ cat ~/.cache/claude-gauge/live.json
 - `site/index.html` —— **单文件**，内联 CSS/JS。EN/中文 i18n：`<span class="en/zh">` + `html[data-lang]`，首屏前按 `navigator.language` 自动匹配（以 `zh` 开头→中文，其余→英文），手动切换记 `localStorage('cg-lang')`。
 - **视觉语言 = EarthOnline / AISelf v0.6 设计系统**（源参考 `~/projects/AISelf/design-exploration`，`LOGO_SPEC.md` + `design-system.html`）：宋体（Songti SC）/ Fraunces 衬线、白底暖光晕、「墨为底色作点缀」的光谱色、隐私/功能卡用**光谱淡底图标芯片**、深色代码面板、页脚锁定 **v0.6 光谱无限符号 ∞**（EarthOnline 标记，内联 SVG `#eo-mark`）。
 - 导航：品牌 + GitHub + 安装 + 语言切换（无版块跳转链接）。页脚：GitHub 与 MIT 同一行 + ∞ EarthOnline。
+- **品牌 logo**（内联 SVG `#logo`）：分段光谱**仪表盘**（紫→蓝→绿→橙→红，与页脚 ∞ 同一光谱、同样圆头粗描边——是 ∞ 标记的「仪表」同胞），黑针 + 白芯轴。**只出现在身份位**：导航品牌、页脚品牌、favicon（白色圆角芯片，`site/favicon.*`）。⚠️ **菜单栏 mock/下拉仍用单色 `#dial`**——它靠变橙/变红演示「一个数字三种颜色」核心卖点，**绝不能换成彩虹**。logo 颜色写死、不吃 `currentColor`，所以只放浅底；深底（README 深色主题）用 `docs/logo-dark.png`。
 - 移动端：交互式菜单栏 mock 在 ≤680px 隐藏，换成一张**内联 base64 静态兜底图**（`.demo-mobile` / `.dm-en` / `.dm-zh`）。
 
 ### 9.2 自托管字体（零第三方请求）
@@ -250,13 +254,13 @@ cat ~/.cache/claude-gauge/live.json
 ### 9.3 部署（Vercel）—— 必须带上 `site/fonts/`
 - **项目** `claude-gauge`（team `earthonlinedevs-projects`，projectId `prj_w3NFiONdFHqx9W61PQN1IcCW1A1i`、orgId `team_j6T3OmyTSNVbXlILIG4vqgn8`）。**域名** `claude-gauge.earthonline.site`，DNS 在**阿里云**（CNAME `claude-gauge` → `cname.vercel-dns.com`），不在 Vercel。
 - ⚠️ **`site/.vercel` 若存在是失效旧链接**（指向另一团队的 `site` 项目）——**别从 `site/` 直接 `vercel --prod`**，会发错项目。
-- 正确流程（拷到干净目录再发，确保 `index.html` + `vercel.json` + **`fonts/`** 一起上）：
+- 正确流程（拷到干净目录再发，确保 `index.html` + `vercel.json` + **`fonts/`** + **`favicon.svg` / `favicon.png`** 一起上）：
   ```bash
   D=$(mktemp -d)
-  cp site/index.html site/vercel.json "$D"/ && cp -r site/fonts "$D"/fonts
+  cp site/index.html site/vercel.json site/favicon.svg site/favicon.png "$D"/ && cp -r site/fonts "$D"/fonts
   mkdir -p "$D/.vercel"
   echo '{"projectId":"prj_w3NFiONdFHqx9W61PQN1IcCW1A1i","orgId":"team_j6T3OmyTSNVbXlILIG4vqgn8","projectName":"claude-gauge"}' > "$D/.vercel/project.json"
   URL=$(vercel deploy --prod --yes --cwd "$D")
   vercel alias set "$URL" claude-gauge.earthonline.site --scope earthonlinedevs-projects
   ```
-- 发布后核对：`curl -sI https://claude-gauge.earthonline.site/` → 200；页面 0 个 `fonts.googleapis/gstatic` 引用；`/fonts/*.woff2` 同源 200、`content-type: font/woff2`。
+- 发布后核对：`curl -sI https://claude-gauge.earthonline.site/` → 200；页面 0 个 `fonts.googleapis/gstatic` 引用；`/fonts/*.woff2` 同源 200、`content-type: font/woff2`；`/favicon.svg` 与 `/favicon.png` 同源 200（漏拷会 404、浏览器标签页没图标）。

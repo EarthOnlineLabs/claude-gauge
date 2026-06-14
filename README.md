@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo-dark.png">
+    <img src="docs/logo.png" alt="ClaudeGauge" width="104" height="104">
+  </picture>
+</p>
+
 # ClaudeGauge
 
 > Your Claude Code usage, right in the menu bar — a glance is all it takes.

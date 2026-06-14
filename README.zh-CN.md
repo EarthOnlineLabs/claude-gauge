@@ -4,6 +4,13 @@
 
 </div>
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo-dark.png">
+    <img src="docs/logo.png" alt="ClaudeGauge" width="104" height="104">
+  </picture>
+</p>
+
 # ClaudeGauge
 
 > 把 Claude Code 的额度放进菜单栏，瞟一眼就知道还剩多少。
