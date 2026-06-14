@@ -17,12 +17,43 @@ LIVE =os.path.expanduser("~/.cache/claude-gauge/live.json")
 ATTN =os.path.expanduser("~/.cache/claude-gauge/attention.json")   # 完成提醒层：未读事件（装了可选层才有）
 ACK  =os.path.expanduser("~/.cache/claude-gauge/ack.json")          # 完成提醒层：已读标记
 os.makedirs(os.path.dirname(CACHE), exist_ok=True)
-LOGO="gauge.with.needle"; STALE_SEC=900
+STALE_SEC=900
 CLAUDE_BUNDLE="com.anthropic.claudefordesktop"                      # 点击拉起 / 自动熄灭判定的目标 App
 ALERT=os.path.expanduser("~/.claude/claude-gauge-alert.py")         # 左键点击动作脚本
-# 有新消息态图标：把系统 SF 符号 gauge.with.needle 本体渲成彩虹的全彩 PNG（由 alert/sfgen.m 生成）。普通态用 sfimage 渲染同一符号，故两态形状 100% 一致。
-# 为何不用 sfconfig：其 Palette 多色在实测 SwiftBar 上糊成单橙色，故彩虹用 image= 全彩位图。
-RAINBOW_PNG="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"
+SEEN =os.path.expanduser("~/.cache/claude-gauge/seen.json")        # ① Claude 最近在用时间戳（随 Claude 显隐 + linger 余韵）
+LINGER=120                                                          # ① Claude 退出后仍显示的秒数；抹平连续一次性命令的闪烁；设 0 = 退出即隐
+def _atomic(path,obj):
+    try:
+        d=os.path.dirname(path); os.makedirs(d,exist_ok=True)
+        fd,tmp=tempfile.mkstemp(dir=d)
+        with os.fdopen(fd,"w") as f: json.dump(obj,f)
+        os.replace(tmp,path)
+    except Exception: pass
+def _claude_running():
+    """桌面端在跑 或 有 claude 命令行会话存活。仅查进程/App，绝不读对话/代码/凭证。"""
+    for cmd in (["/usr/bin/lsappinfo","find","bundleID="+CLAUDE_BUNDLE],["/usr/bin/pgrep","-x","claude"]):
+        try:
+            if subprocess.run(cmd,capture_output=True,text=True,timeout=2).stdout.strip(): return True
+        except Exception: pass
+    return False
+def _active():
+    """Claude 在用：此刻在跑（刷新 last_seen），或仍在 linger 窗口内。"""
+    now=time.time()
+    if _claude_running(): _atomic(SEEN,{"ts":now}); return True
+    try: return (now-float((json.load(open(SEEN)) or {}).get("ts",0))) < LINGER
+    except Exception: return False
+# ① Claude 没在用 → 输出空 → SwiftBar 隐藏菜单栏项（正常路径不碰网络）
+if not _active(): raise SystemExit(0)
+# 菜单栏图标 = 新品牌 logo 的分段光谱仪表盘（与落地页/favicon 同形）。实测当前 macOS+SwiftBar：
+# templateImage 与 image= 均【无容器框】——常态(OK)用 templateImage 单色蒙版、自动随真实菜单栏深浅变黑/白；
+# 橙/红/灰/彩虹用 image= 全彩位图（这些颜色本就恒显、不需随栏自适应）。全部 base64 内嵌，运行期零依赖。
+# 重新生成：bash alert/build-menubar-icons.sh（从 docs/logo.svg 渲染，把下面 5 个 base64 粘回）。
+ICON_SZ="width=21 height=17"
+ICON_OK="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"
+ICON_WARN="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"
+ICON_CRIT="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"
+ICON_STALE="iVBORw0KGgoAAAANSUhEUgAAADEAAAAoCAYAAABXRRJPAAAABmJLR0QA/wD/AP+gvaeTAAAFb0lEQVRYhe1ZbYhUVRh+3uNc2tUtZw0xZv2hRBjq9kVIYCAWglSEGS3Vxlrj3HtlhaEgYasfXkjSpLY/zua5s7uSWxkbVuYaIVSSmKFpUYZFYkQhlZK2rrLj7py3H84O556Z2Zm5O5sFPv/O+3We55xzz8cMcBX/DVCtCnV3dy/MZrP3CCGamXkegBiABgAWM58jorMAfgLwvVLqcyI66LruSC36npAI3/eXAGgFcB+ApirThwB8LIQYWL16dR8RqbA8QonIjXofEd0WtmMdzPw3EbU5jvNhmPyqREgppxLRBgBJAFPCdFgGe4UQTiKR+KWapIpFSCmbiWgngJvGCTtORPuY+ZhS6mQkEjkPYEQpdR2A2QBuBrAYwF0AIiVqDAGwHcd5p1JuFYmQUq4goj5c/lBNjDLz+5ZldcTj8ZOV1Nu2bVs0m80mlVLrStRkAJts236BiLhcvbIipJSPENHbKBy5IWZ+sb6+PtXW1nahEvIFTJmpu7v7IWbeDODGIiFbbNtOlhMyroitW7cuF0LsRqGAfUKIJ6tdu6UgpZwqhNjIzMkCgkSbbNt+brz8kiJ6enrmZbPZLwFEDdeWU6dOPeN53mg4yqXh+34rgB4A12hmJqJW27Z3lMorKsLzvEgsFjsMwNxCNzqO8/yE2Y4DKeX9uQ1EF3KBiJpt2/65WI4oZozFYutQKKBnsgUAgOu6e5g5bpinMbPPzEUHvcCYTqdnMfNJAFM18+FoNHp3S0vLpRryBQBs3759WiaT8Zl5GYDNjuO8AgBSyteI6OkAWaIVtm3vMmsUzIRSqgNBAZeEEPHJENDb2ztzeHj4U2Z+HMBMAC/19/dPAYBMJtMB4LjBbYPneQWcA4ZUKtUghLCNmNcTicSx2tIH0un03NHR0QMAFmnmIy0tLVkASCaTGQAdeg4RLWxqarrXrBUQYVnWemaeppmGR0ZGNtWO+mVIKZuZeT+Cp/+hSCTyoB5n2/ZuAEd0m1Kq06xnTk2b0T66du3a3yfAtwBSyqVEtB/BW+8AMy+Nx+On9djcIddn2BZ2dnbW67a8iJxjhu5k5g9qRR4A0un0SiL6CMB0jdQbzLzSdd2LxXKY+S3T1tDQsFhvC82xCMGTeRRAaqLExyClTDLzuwDqNPPLiUTiqfEeR67rnmHmrw3zEr2RJ83M84kCO+6hUqNTCdLp9Cyl1HIhRAMzzwfQrrmzAJKO43Q5jlO2FhHtBnC7zlX3R7TAeUbucYSE7/tLmPk9IprBXHB3ywBocxynv9J6RPSDXsfkqs/E9fpMMPNvVXIHAEgpLQBvwvi+cjUHhRAP2La9v5qaSqlfjVUSqJ3/JojoWiP3fDUdjSE31bOL+YQQ6WoF5GqaXAJc9S028FAXQhS9V1WAkt9R7jpTNYjIfAoHuWqBg0bgdISA67onYBxQOQwJIfaEqVluleRFMPMfuoOZ54TskIUQjwL4RjOfAfDYBB5Rcw1uf+ptfcn8aAQGtrFqkEgkTkSj0TuJ6FYAi+vq6uY4jjMQth6ABXpDCBHYOfXD7TvdQUS3dHV1Nba3t58N02vuIvdtmNwiCBxuSqkA1/xMRKPRowDOab4plmUtrxGJ0EilUjcAuMMwf6Y38iJyI/eJ7mTmVZPGrkJYlvUEgj/U/dXY2PiVHmNuo+Zla5nv+wtwhZA7OPXrCph5x9ibYwzCCBgAoO9SgojWTxrL8lgFY2cC0GsGBUS4rjtCRK/qNmZead7f/y0QUath2uu67lEzrtgbO0VE+YcQEZ0eHBzMTALHsjDub6yU8orFFYhwXfeiUmoFgAMAvmDmhz3PC/3fwUQghHgWwE5mPgbAXbNmzcErweMqruL/hn8AioAFs/0YXAoAAAAASUVORK5CYII="
+ICON_RAINBOW="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"
 WARN_TH,CRIT_TH=25.0,10.0
 COL_WARN,COL_CRIT,COL_STALE="#e08a2b","#e0483d","#9a9a9a"
 def _is_dark():
@@ -101,7 +132,7 @@ def _armed():
     """有未读完成/需关注事件，且事件发生时你不在 Claude 前台 → 点亮彩虹。"""
     att=_loadj(ATTN)
     if not att or "ts" not in att: return False
-    if att.get("front")==CLAUDE_BUNDLE: return False
+    if att.get("front")==(att.get("host") or CLAUDE_BUNDLE): return False   # 触发时你已在会话载体(终端/桌面)前台 → 不点亮
     return _ts(att.get("ts")) > _ts((_loadj(ACK) or {}).get("ts"))
 
 def title_line(fh,wk,d,stale=False,armed=False):
@@ -122,13 +153,13 @@ def title_line(fh,wk,d,stale=False,armed=False):
         else:              text,col=s5(True),(COL_CRIT if fl==2 else COL_WARN)
     if spending and col is None and _w(f"{text}+$")<=MAXW: text=f"{text}+$"
     if armed:
-        act=f"image={RAINBOW_PNG} width=22 height=21 bash=/usr/bin/python3 param0={ALERT} param1=open terminal=false"
+        act=f"image={ICON_RAINBOW} {ICON_SZ} bash=/usr/bin/python3 param0={ALERT} param1=open terminal=false"
         if stale:       return f"{text}~ | color={COL_STALE} {act}"
         if col is None: return f"{text} | {act}"                   # 够用态：不写 color，用菜单栏自适应色（深色壁纸下自动白字，别强制成黑）
         return f"{text} | color={col} {act}"                       # 数字额度色（橙/红，本就该恒定显色），图标彩虹
-    if stale: return f"{text}~ | color={COL_STALE} sfimage={LOGO}"
-    if col is None: return f"{text} | sfimage={LOGO}"
-    return f"{text} | color={col} sfimage={LOGO}"
+    if stale: return f"{text}~ | color={COL_STALE} image={ICON_STALE} {ICON_SZ}"
+    if col is None: return f"{text} | templateImage={ICON_OK} {ICON_SZ}"   # 够用态：单色蒙版，自动随真实菜单栏深浅变黑/白（无框）
+    return f"{text} | color={col} image={ICON_CRIT if col==COL_CRIT else ICON_WARN} {ICON_SZ}"
 
 def section(label, icon, u, cd_str, col):
     print(f"{label} | sfimage={icon} size=12 color={NORMAL}")                       # 标签：默认色(清晰)
@@ -142,11 +173,11 @@ def render(d,ts):
     son=remain(d.get("seven_day_sonnet")); opus=remain(d.get("seven_day_opus"))
     # 完成提醒层：仅当装了该层(有 attention.json)才做前台检测；未装则零开销、输出同今天。
     att=_loadj(ATTN)
-    if att and _front_bundle()==CLAUDE_BUNDLE:          # 正看着 Claude → 标记已读（回到 ≤15s 自动熄灭）
+    if att and _front_bundle()==(att.get("host") or CLAUDE_BUNDLE):          # 回到会话载体(终端/桌面)前台 → 标记已读（≤15s 自动熄灭）
         if _ts(att.get("ts")) > _ts((_loadj(ACK) or {}).get("ts")): _awrite_ack(time.time())
     print(title_line(fh,wk,d,stale,_armed() if att else False))
     print("---")
-    print(f"Claude Code 用量 | sfimage={LOGO} color={NORMAL}")                      # 标题：默认色(清晰)
+    print(f"Claude Code 用量 | color={NORMAL}")                                     # 标题（gauge 图标按用户要求移除，下拉头不再重复）
     if stale:
         print("---")
         print(f"⚠️ 数据已 {int(age//60)} 分钟未更新 | color={COL_WARN}")
@@ -162,6 +193,10 @@ def render(d,ts):
     upd=datetime.datetime.fromtimestamp(ts).strftime("%H:%M")
     print((f"更新于 {upd}（{int(age//60)}分钟前）" if age>=60 else f"更新于 {upd}（刚刚）")+f" | size=11 color={MUTE}")
     home=os.path.expanduser("~"); print(f"立即刷新（强制拉最新）| shell={home}/.claude/claude-gauge-refresh.sh | param0=force | terminal=false | refresh=true | sfimage=arrow.clockwise")
+    un=f"{home}/.claude/claude-gauge-uninstall.sh"                    # ② 菜单卸载入口（装了稳定卸载脚本才显示，子菜单收纳、不污染主下拉）
+    if os.path.exists(un):
+        print("---"); print(f"管理 | size=11 color={MUTE}")
+        print(f"--卸载 ClaudeGauge… | shell=/bin/bash | param0={un} | terminal=true | sfimage=trash")
 
 def load(p):
     try:
