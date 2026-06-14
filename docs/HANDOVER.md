@@ -88,7 +88,7 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 
 ### 2.4 提醒层（可选 · opt-in）`alert/claude-gauge-alert.py`
 
-- **「有新发现」彩虹态（面向会话载体 ⑤）**：装了它之后，你离开本次会话的**载体 App**（运行 CC 的终端 App，或 Claude 桌面 App）时若有 CC 会话**完成**（`Stop` hook）或**停下来等你授权**（`Notification`/`permission_prompt` hook），菜单栏表盘点成**彩虹**叫你回来；**左键点图标 = 拉回会话所在载体（终端会话→终端 App、桌面会话→桌面端）+ 熄灭彩虹**，右键照常开下拉。**数字仍保留额度三色**（橙/红不被遮蔽），只把图标染彩虹——两个信号共存。
+- **「有新发现」彩虹态（面向会话载体 ⑤）**：装了它之后，你离开本次会话的**载体 App**（运行 CC 的终端 App，或 Claude 桌面 App）时若有 CC 会话**完成**（`Stop` hook）或**停下来等你授权**（桌面端经 `PermissionRequest` hook 触发——实测桌面端**结构性不发** `Notification`/`permission_prompt`，故授权提醒在桌面端靠 PermissionRequest；终端模式两者皆可。PermissionRequest 仅真请求授权时触发、自动放行的工具不触发，无噪音），菜单栏表盘点成**彩虹**叫你回来；**左键点图标 = 拉回会话所在载体（终端会话→终端 App、桌面会话→桌面端）+ 熄灭彩虹**，右键照常开下拉。**数字仍保留额度三色**（橙/红不被遮蔽），只把图标染彩虹——两个信号共存。
 - **绝不读内容**：被 hook 调用时**整条忽略 stdin**（CC 灌进来的 `transcript_path` 一律不读），只原子写 `attention.json = {ts, event, front, host}`：`front` = 触发那刻前台 App bundle id（`front_bundle()`，`lsappinfo`）；`host` = 本次会话宿主 App bundle，由 `session_host()` 走**进程祖先链**（`ps -o ppid=`/`comm=`）认出（终端会话→终端 App，桌面会话→桌面端），跳过 claude CLI 自身与 shell/解释器——全程只读进程元数据（`ps`/`defaults`/`lsappinfo`），不弹授权框、绝不读对话/代码。渲染层据 `attention.ts > ack.ts` 且 `attention.front != (attention.host or 桌面端 bundle)` 决定点亮；回到会话载体前台时渲染层自动写 `ack.json` → 彩虹熄灭。**关键修复**：旧版点击写死拉桌面端，终端会话点了会跳错 App（甚至没装桌面端时点了没反应）；现在 `open -b <host>`（回退链 host→front→桌面端）回到正确载体。
 - **opt-in / 默认不装**：靠 `alert/install-alerts.sh` 安装（见 §4 组件表）；**不装时 `attention.json` 不存在 → 插件相关分支全程短路，菜单栏输出与今天逐字节一致**。不联网、不弹系统通知、零遥测。
 - 完整缓存契约、点亮判定、armed 渲染与彩虹位图生成见 `docs/ARCHITECTURE.md` §8.5。

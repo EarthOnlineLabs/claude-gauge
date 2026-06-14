@@ -64,7 +64,7 @@ Now the menu bar updates instantly as you use Claude Code — all local, zero co
 
 ## Completion alert — come back at the right moment
 
-Kick off a long task and step away. When a Claude Code session **finishes** (its `Stop` event), the menu-bar gauge lights up in rainbow to wave you back. One click brings the Claude app to the front and clears the rainbow. The percentage keeps its usual color; only the icon turns rainbow, so a quota warning is never masked.
+Kick off a long task and step away. When a Claude Code session **finishes** — or **pauses to ask for your permission** — the menu-bar gauge lights up in rainbow to wave you back. One click brings the Claude app to the front and clears the rainbow. The percentage keeps its usual color; only the icon turns rainbow, so a quota warning is never masked.
 
 It's an **opt-in** extra layer, off by default — turn it on with one command:
 
@@ -73,7 +73,7 @@ bash alert/install-alerts.sh          # turn it on
 bash alert/install-alerts.sh --uninstall   # turn it off
 ```
 
-It reacts **only to Claude Code's own "finished" (`Stop`) event** — it never reads your conversations or code, shows no pop-ups, and sends no telemetry. Installing safely merges two hooks into your `~/.claude/settings.json` (backed up first, idempotent, and leaving any hooks you already have untouched); uninstalling removes only its own entries.
+It reacts **only to Claude Code's own "finished" and "needs-permission" events** — it never reads your conversations or code, shows no pop-ups, and sends no telemetry. Installing safely merges two hooks into your `~/.claude/settings.json` (backed up first, idempotent, and leaving any hooks you already have untouched); uninstalling removes only its own entries.
 
 ## How it works (for the curious)
 
