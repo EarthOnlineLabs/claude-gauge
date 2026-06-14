@@ -37,7 +37,7 @@ Click it for the full breakdown: your current 5-hour window and this week's wind
 
 A usage gauge has to read your account, so *how* it does that matters more than any feature:
 
-- **Reads only your usage** — never your conversations, prompts, files, or code. (Most usage trackers read your `~/.claude` conversation logs to count usage; this one never does.)
+- **Reads only your usage** — never your conversations, prompts, files, or code. Other usage trackers — even the open-source ones — read your `~/.claude/projects` conversation logs, down to the text of your prompts and replies; this one never opens them.
 - **Talks only to Anthropic** — your token goes to Anthropic's own usage endpoint and nowhere else: no third-party servers, none of ours, no analytics.
 - **Open and auditable** — plain bash and python with no obfuscation; read it before you run it. Uninstalling removes everything and never touches your credentials.
 - **Tiny** — a small menu-bar script plus a light background refresh. That's the whole thing.
@@ -61,6 +61,19 @@ The percentage appears in the top-right of your menu bar within a few seconds. T
 ```
 
 Now the menu bar updates instantly as you use Claude Code — all local, zero cost. It only affects sessions started after you add it. Without it, the background refresher still updates every minute or so.
+
+## Completion alert — come back at the right moment
+
+Kick off a long task and step away. When a Claude Code session **finishes** (its `Stop` event), the menu-bar gauge lights up in rainbow to wave you back. One click brings the Claude app to the front and clears the rainbow. The percentage keeps its usual color; only the icon turns rainbow, so a quota warning is never masked.
+
+It's an **opt-in** extra layer, off by default — turn it on with one command:
+
+```bash
+bash alert/install-alerts.sh          # turn it on
+bash alert/install-alerts.sh --uninstall   # turn it off
+```
+
+It reacts **only to Claude Code's own "finished" (`Stop`) event** — it never reads your conversations or code, shows no pop-ups, and sends no telemetry. Installing safely merges two hooks into your `~/.claude/settings.json` (backed up first, idempotent, and leaving any hooks you already have untouched); uninstalling removes only its own entries.
 
 ## How it works (for the curious)
 

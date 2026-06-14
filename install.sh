@@ -49,9 +49,10 @@ ok "后台刷新器已加载"
 
 # 5. 先拉一次数据 + 刷新菜单栏
 bash "$HOME/.claude/claude-gauge-refresh.sh" force || true
-# 重启 SwiftBar 以加载新插件（仅 refreshallplugins 不认新文件）
+# 重启 SwiftBar 以加载新插件（refreshallplugins 不认新文件；osascript 退出实测不可靠会留旧实例冻住，必须 pkill 确保真重启）
 osascript -e 'tell application "SwiftBar" to quit' 2>/dev/null || true
-sleep 1; open -a SwiftBar 2>/dev/null || true
+pkill -x SwiftBar 2>/dev/null || true
+sleep 2; open -a SwiftBar 2>/dev/null || true
 ok "已拉取首次数据并加载插件"
 
 echo
