@@ -51,12 +51,7 @@ open(f"{tmp}/ic_ok.svg","w").write(solid("#1d1d1f"))
 open(f"{tmp}/ic_warn.svg","w").write(solid("#e08a2b"))
 open(f"{tmp}/ic_crit.svg","w").write(solid("#e0483d"))
 open(f"{tmp}/ic_stale.svg","w").write(solid("#9a9a9a"))
-# 彩虹提醒态：白针/白轴。菜单栏多为深底（深色模式或深/彩色壁纸），白针与白色百分比同色。
-# image= 不能像文字那样自适应，也无法检测被壁纸压暗的栏（系统会报 Light），故固定白针——
-# 仅「浅色模式 + 浅色壁纸」的浅底栏下白针会偏淡，属已知取舍。
-rain = base().replace('stroke="#1B1B1B"', 'stroke="#ededef"').replace('fill="#1B1B1B"', 'fill="#ededef"')
-rain = rain.replace(f'<circle cx="12" cy="12" r="{PIP_R}" fill="#FFFFFF"/>', '')
-open(f"{tmp}/ic_rain.svg","w").write(rain)
+open(f"{tmp}/ic_rain.svg","w").write(base())   # 彩虹弧 + 黑针 + 白芯（= 品牌 logo 本体）
 PY
 
 for n in ok warn crit stale rain; do
