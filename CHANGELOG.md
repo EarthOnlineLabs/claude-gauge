@@ -5,6 +5,22 @@ All notable changes to ClaudeGauge will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Landing page** re-skinned in the EarthOnline/AISelf v0.6 design language
+  (Songti/Fraunces serif, spectrum accents, dark code panel, spectrum-∞
+  footer). Nav slimmed to GitHub / Install / language toggle; footer trimmed
+  (GitHub merged into the MIT line). Browser-language auto-detect (zh →
+  Chinese, otherwise English).
+- **Landing fonts self-hosted** (Fraunces, JetBrains Mono, and a page-subset
+  of Noto Serif SC) under `site/fonts/` — the marketing site now makes **zero
+  third-party requests**; Chinese falls back to system Songti SC on macOS.
+- **SwiftBar dropdown** trimmed via `swiftbar.hide*` plugin metadata: the
+  host's auto-appended footer (last-updated / run-in-terminal / disable-plugin
+  / about / SwiftBar submenu) is hidden, so the menu ends cleanly at the
+  "refresh now" action.
+
 ## [0.1.0] - 2026-06-13
 
 First public release. A macOS menu-bar gauge for Claude Code (Pro/Max)

@@ -241,6 +241,7 @@ if tk.expiresAt/1000 < now + 60:               # 距过期 ≤ 60 秒
 | `refresher/claude-gauge-refresh.sh` | 数据层 |
 | `bridge/claude-gauge-statusline.py` | 桥接层（可选） |
 | `install.sh` / `uninstall.sh` | 安装 / 卸载 |
+| `site/` | 落地页（`index.html` + 自托管 `fonts/` + `vercel.json`）——与三层工具独立，形态与发布见 `docs/HANDOVER.md` §9 |
 | `docs/ARCHITECTURE.md` | 本文 |
 | `docs/screenshots/menubar.png` | 菜单栏截图（显示 "49%"） |
 

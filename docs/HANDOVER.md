@@ -99,7 +99,7 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 
 **产品已完成、已开源、已部署，可直接交接。**
 
-- **线上落地页**：https://claude-gauge.earthonline.site （HTTP 200，主打"只读用量不读对话 + 零额度"）
+- **线上落地页**：https://claude-gauge.earthonline.site （HTTP 200）。已按 **EarthOnline / AISelf v0.6 设计语言换皮**（宋体/Fraunces 衬线 + 光谱点缀），字体**自托管、零第三方请求**。形态与**发布流程见 §9**（注意：部署必须带上 `site/fonts/`）。
 - **开源仓库**：https://github.com/EarthOnlineDev/claude-gauge （PUBLIC，`HEAD == origin/main`，工作区干净已推送）
 - **运行时**：launchd 任务 `dev.earthonline.claude-gauge` 已加载运行；`~/.cache/claude-gauge/cache.json` 数据新鲜；SwiftBar 插件已装。
 - **安装一致性**：三个已安装文件与 repo **字节级一致**（经审计 `diff` 零差异）。
@@ -143,6 +143,8 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 ## 6. Roadmap / TODO
 
 > **非目标 · 阈值通知（刻意不做）**：落地页曾出现过"跨过 75% / 90% 弹原生 macOS 通知"的对外文案，但这**从来不是需求、代码也从未实现**——本次已把该虚假声明从站点撤除。产品方明确不要这个功能：信号靠菜单栏变色（够用近黑 / 75% 橙 / 90% 红）+ 诚实陈旧变灰来传达，不弹系统通知。**请勿再加回该声明，也不要实现它。**
+>
+> **进行中（另一开发线，勿动）**：另有一条开发线在做「**消息完成提醒**」——插件标题栏的 attention / 彩虹图标逻辑（`~/.cache/claude-gauge/attention.json` + `ack.json` 层）和新建的 `alert/` 目录、`~/.claude/claude-gauge-alert.py`。该功能**尚未提交**（工作区里 `plugin/claude-gauge.15s.sh` 的 M 与 `alert/` 即是它），由那条线负责定稿。落地页相关改动与其**无关、未触碰**——接手时请勿误删/误提交这些未完成文件。
 - [ ] **`kc_account()` 解析健壮性**（`refresher/claude-gauge-refresh.sh:34-41`）：当前在标准 CC 安装上正确（解析出的 acct == `$USER`）。残余风险：若某机器 keychain 的 acct ≠ `$USER` 且文本解析失败，回退用 `$USER` 写回可能在错误 account 下**新建第二个钥匙串项**。改进：解析失败时**宁可不写也不猜 `$USER`**，或直接复用 `kc_read()` 成功时的 acct。低概率、不紧急。
 - [ ] **文档补充**：`refresh` 测试钩子即使 token 还新鲜也会强制 rotate（烧掉一次轮换，但 CC 内存里的 access_token 仍有效到真实过期、不会登出）——在 §7.3 或脚本注释里点明。
 - [ ] **用量趋势图**：现在只有当前快照。可在 `cache.json` 旁追加轻量时序日志（append-only），在下拉里画 5h / 7d 趋势 sparkline。
@@ -218,8 +220,43 @@ cat ~/.cache/claude-gauge/live.json
 | `refresher/claude-gauge-refresh.sh` | 数据层，LaunchAgent 刷新器（装到 `~/.claude/`） |
 | `bridge/claude-gauge-statusline.py` | 桥接层，CC statusLine 命令（装到 `~/.claude/`） |
 | `install.sh` / `uninstall.sh` | 安装 / 卸载 |
+| `site/index.html` | 落地页（单文件静态站，EarthOnline 换皮；发布见 §9） |
+| `site/fonts/*.woff2` | 落地页自托管字体（Fraunces / JetBrains Mono / Noto Serif SC 子集；零第三方） |
+| `site/vercel.json` | 落地页 Vercel 配置（安全 headers / cleanUrls） |
 | `docs/screenshots/menubar.png` | 菜单栏截图 |
 | `~/.cache/claude-gauge/cache.json` | 后台 API 数据（权威） |
 | `~/.cache/claude-gauge/live.json` | CC 桥接即时数据 |
 | `~/.cache/claude-gauge/refresh-state.json` | 刷新器节流状态 |
 | `~/Library/LaunchAgents/dev.earthonline.claude-gauge.plist` | LaunchAgent 定义 |
+
+---
+
+## 9. 落地页（`site/`）与发布流程
+
+落地页是与三层工具**完全独立**的单页静态站，自己部署、自己的视觉语言；改它不影响工具，反之亦然。
+
+### 9.1 形态与设计
+- `site/index.html` —— **单文件**，内联 CSS/JS。EN/中文 i18n：`<span class="en/zh">` + `html[data-lang]`，首屏前按 `navigator.language` 自动匹配（以 `zh` 开头→中文，其余→英文），手动切换记 `localStorage('cg-lang')`。
+- **视觉语言 = EarthOnline / AISelf v0.6 设计系统**（源参考 `~/projects/AISelf/design-exploration`，`LOGO_SPEC.md` + `design-system.html`）：宋体（Songti SC）/ Fraunces 衬线、白底暖光晕、「墨为底色作点缀」的光谱色、隐私/功能卡用**光谱淡底图标芯片**、深色代码面板、页脚锁定 **v0.6 光谱无限符号 ∞**（EarthOnline 标记，内联 SVG `#eo-mark`）。
+- 导航：品牌 + GitHub + 安装 + 语言切换（无版块跳转链接）。页脚：GitHub 与 MIT 同一行 + ∞ EarthOnline。
+- 移动端：交互式菜单栏 mock 在 ≤680px 隐藏，换成一张**内联 base64 静态兜底图**（`.demo-mobile` / `.dm-en` / `.dm-zh`）。
+
+### 9.2 自托管字体（零第三方请求）
+- `site/fonts/` 下自托管 8 个 woff2：**Fraunces**（normal+italic，拉丁子集）、**JetBrains Mono**（500/700）、**Noto Serif SC**（按页面用到的汉字裁的子集，400/600/700/900）。
+- **不引用 Google Fonts CDN** —— 落地页**零第三方请求**，与产品「零第三方」立场一致（页内应有 0 个 `fonts.googleapis/gstatic` 引用）。
+- 中文字体栈 `'Songti SC' → … → 'Noto Serif SC'`：**Mac 用系统宋体**（根本不下载 Noto），**仅非 Mac 才拉 Noto 子集**拿到中文衬线。
+- ⚠️ **维护**：Noto 子集是按**当前**页面文字「按字裁」的。大改中文文案、引入新字后需**重跑子集**（否则非 Mac 上新字会退成系统衬线；Mac 不受影响）。生成方式见 commit `e8770b9`：用 `https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@<w>&text=<页面汉字>`（Chrome UA）取子集 woff2。
+
+### 9.3 部署（Vercel）—— 必须带上 `site/fonts/`
+- **项目** `claude-gauge`（team `earthonlinedevs-projects`，projectId `prj_w3NFiONdFHqx9W61PQN1IcCW1A1i`、orgId `team_j6T3OmyTSNVbXlILIG4vqgn8`）。**域名** `claude-gauge.earthonline.site`，DNS 在**阿里云**（CNAME `claude-gauge` → `cname.vercel-dns.com`），不在 Vercel。
+- ⚠️ **`site/.vercel` 若存在是失效旧链接**（指向另一团队的 `site` 项目）——**别从 `site/` 直接 `vercel --prod`**，会发错项目。
+- 正确流程（拷到干净目录再发，确保 `index.html` + `vercel.json` + **`fonts/`** 一起上）：
+  ```bash
+  D=$(mktemp -d)
+  cp site/index.html site/vercel.json "$D"/ && cp -r site/fonts "$D"/fonts
+  mkdir -p "$D/.vercel"
+  echo '{"projectId":"prj_w3NFiONdFHqx9W61PQN1IcCW1A1i","orgId":"team_j6T3OmyTSNVbXlILIG4vqgn8","projectName":"claude-gauge"}' > "$D/.vercel/project.json"
+  URL=$(vercel deploy --prod --yes --cwd "$D")
+  vercel alias set "$URL" claude-gauge.earthonline.site --scope earthonlinedevs-projects
+  ```
+- 发布后核对：`curl -sI https://claude-gauge.earthonline.site/` → 200；页面 0 个 `fonts.googleapis/gstatic` 引用；`/fonts/*.woff2` 同源 200、`content-type: font/woff2`。
