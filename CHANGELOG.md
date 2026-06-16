@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Completion alert is now on by default.** `./install.sh` merges the alert's
+  `Stop` / `PermissionRequest` / `Notification` hooks into
+  `~/.claude/settings.json` for you (backed up first, idempotent, re-parsed for
+  validity, atomic write, and never touching hooks you already have), and
+  `./uninstall.sh` symmetrically removes only those entries again (also backed
+  up, leaving your other hooks untouched). Previously it was an opt-in layer you
+  had to enable separately with `bash alert/install-alerts.sh`; that command
+  still works for toggling it on its own. The hook merge is non-fatal — a
+  missing or malformed `settings.json` is skipped with a warning and never
+  blocks the menu-bar install.
 - **Landing page** re-skinned in the EarthOnline/AISelf v0.6 design language
   (Songti/Fraunces serif, spectrum accents, dark code panel, spectrum-∞
   footer). Nav slimmed to GitHub / Install / language toggle; footer trimmed

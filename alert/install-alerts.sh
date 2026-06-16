@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# ClaudeGauge 完成提醒层（可选 / opt-in）安装器。
+# ClaudeGauge 完成提醒层安装器（默认随主 install.sh 启用；也可单独跑来重新开启）。
 # 它做两件事：① 装 alert 脚本到 ~/.claude；② 把 Stop + PermissionRequest + Notification 三条 hook
 # 幂等合并进 ~/.claude/settings.json（改前必先备份、改后校验、原子写、绝不动你已有的 hooks）。
 # 触发点：Stop=回合完成；PermissionRequest=需要你授权(桌面端真实触发点)；Notification=终端模式的授权/idle 通知(桌面端不发)。
 #
-# 这是唯一会自动改 settings.json 的入口——主 install.sh/uninstall.sh 都不碰它，保持克制。
-# 卸载：alert/install-alerts.sh --uninstall
+# 这是唯一会改 settings.json 的入口：主 install.sh 默认调用它启用，主 uninstall.sh 对称移除我们的 hook。
+# 单独关闭：alert/install-alerts.sh --uninstall
 set -euo pipefail
 say(){ printf "\033[1;36m▸\033[0m %s\n" "$1"; }
 ok(){  printf "\033[1;32m✓\033[0m %s\n" "$1"; }
@@ -116,4 +116,4 @@ PY
 echo
 ok "完成提醒层已启用。"
 say "之后：Claude Code 回合结束 / 卡住等授权，且你不在 Claude 前台时，菜单栏图标变彩虹；左键点一下回到 Claude 即熄灭。"
-say "卸载：alert/install-alerts.sh --uninstall"
+say "关闭：随 ./uninstall.sh 一起移除，或单独跑 bash alert/install-alerts.sh --uninstall"

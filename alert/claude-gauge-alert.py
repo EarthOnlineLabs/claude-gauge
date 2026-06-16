@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# ClaudeGauge 完成提醒层（可选/opt-in）——「有新发现」彩虹态的事件入口。
+# ClaudeGauge 完成提醒层（默认随安装启用）——「有新发现」彩虹态的事件入口。
 # 被 Claude Code 的 Stop / Notification hook 调用，以及被菜单栏图标的左键点击调用。
 #
 # 隐私红线：本脚本【绝不读 stdin】。Claude Code 会把含 transcript_path 的 JSON

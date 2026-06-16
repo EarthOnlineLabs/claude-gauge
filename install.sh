@@ -55,6 +55,17 @@ pkill -x SwiftBar 2>/dev/null || true
 sleep 2; open -a SwiftBar 2>/dev/null || true
 ok "已拉取首次数据并加载插件"
 
+# 6. 完成提醒层（默认开）：复用 alert/install-alerts.sh 把 Stop/PermissionRequest/Notification
+#    hook 幂等合并进 ~/.claude/settings.json（先备份、回解析校验、原子写、绝不动你已有的 hooks）。
+#    非致命：settings.json 缺失/异常时这步安全跳过，绝不拖垮上面的菜单栏主功能；uninstall.sh 会对称移除。
+echo
+if [ -f "$REPO/alert/install-alerts.sh" ]; then
+  bash "$REPO/alert/install-alerts.sh" \
+    || warn "完成提醒层未启用（settings.json 异常已跳过，不影响菜单栏）；修好后可单独跑 bash alert/install-alerts.sh"
+else
+  warn "未找到 alert/install-alerts.sh，跳过完成提醒层"
+fi
+
 echo
 ok "安装完成！菜单栏右上角应出现用量百分比。"
 echo

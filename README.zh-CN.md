@@ -41,7 +41,7 @@
 
 一个用量工具必须读你的账号，所以它**怎么读**，比有多少功能更要紧：
 
-- **只看额度** —— 绝不碰你的对话、提示词、文件和代码。别的用量工具——连开源的那些——都会读你 `~/.claude/projects` 里的对话记录，连 prompt 和回复的原文都在内；它从不打开它们。
+- **只看额度** —— 绝不碰你的对话、提示词、文件和代码。不少用量工具是靠读你 `~/.claude/projects` 里的对话记录来统计的，连 prompt 和回复的原文都在内；它从不打开那些文件。
 - **只跟 Anthropic 说话** —— token 只发往 Anthropic 官方的用量接口，别无他处：没有第三方服务器，没有我们自己的服务器，不收集任何数据。
 - **开源、能审** —— 全是没有混淆的 bash 和 python，装之前你可以自己读一遍。卸载脚本清得干干净净，绝不动你的凭证。
 - **极轻** —— 一个菜单栏小脚本，加一个后台轻量刷新，就这些。
@@ -72,14 +72,14 @@ cd claude-gauge
 
 <p align="center"><img src="docs/screenshots/alert-zh.png" alt="会话完成或等你授权时，菜单栏表盘亮起彩虹——点一下跳回 Claude" width="392"></p>
 
-这是一个**可选**的附加层，默认不开——一条命令开启：
+它**默认就开**——`./install.sh` 会帮你装好。它**只对 Claude Code 自己的「完成」「等授权」事件作反应**——绝不读你的对话或代码，不弹窗，也不收集任何数据。安装时会把它的 hook 安全地合并进你的 `~/.claude/settings.json`（先备份、幂等、回解析校验，且绝不动你已有的 hooks）；`./uninstall.sh` 也会把这些条目原样撤掉。
+
+想单独开关它：
 
 ```bash
-bash alert/install-alerts.sh          # 开启
+bash alert/install-alerts.sh               # 重新开启
 bash alert/install-alerts.sh --uninstall   # 关闭
 ```
-
-它**只对 Claude Code 自己的「完成」「等授权」事件作反应**——绝不读你的对话或代码，不弹窗，也不收集任何数据。安装会把两条 hook 安全地合并进你的 `~/.claude/settings.json`（先备份、幂等，且绝不动你已有的 hooks）；卸载只删它自己加的条目。
 
 ## 工作原理
 

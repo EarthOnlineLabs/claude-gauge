@@ -14,7 +14,7 @@ export PATH="/usr/bin:/bin:/usr/sbin:/sbin"
 import os, json, urllib.request, datetime, time, sys, subprocess, tempfile
 CACHE=os.path.expanduser("~/.cache/claude-gauge/cache.json")
 LIVE =os.path.expanduser("~/.cache/claude-gauge/live.json")
-ATTN =os.path.expanduser("~/.cache/claude-gauge/attention.json")   # 完成提醒层：未读事件（装了可选层才有）
+ATTN =os.path.expanduser("~/.cache/claude-gauge/attention.json")   # 完成提醒层：未读事件（默认开；旧装/异常时可能没有→分支短路）
 ACK  =os.path.expanduser("~/.cache/claude-gauge/ack.json")          # 完成提醒层：已读标记
 os.makedirs(os.path.dirname(CACHE), exist_ok=True)
 STALE_SEC=900
@@ -103,7 +103,7 @@ def scol(rem):
     if l==1: return f" color={COL_WARN}"
     return f" color={NORMAL}"
 
-# ---- 完成提醒层（可选）：未装时 attention.json 不存在 → _armed 恒 False、渲染与今天逐字节一致 ----
+# ---- 完成提醒层（默认开）：无 attention.json 时（旧装/异常/已关）_armed 恒 False、渲染与无此层逐字节一致 ----
 def _loadj(p):
     try: return json.load(open(p))
     except Exception: return None

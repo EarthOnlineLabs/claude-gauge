@@ -37,7 +37,7 @@ Click it for the full breakdown: your current 5-hour window and this week's wind
 
 A usage gauge has to read your account, so *how* it does that matters more than any feature:
 
-- **Reads only your usage** — never your conversations, prompts, files, or code. Other usage trackers — even the open-source ones — read your `~/.claude/projects` conversation logs, down to the text of your prompts and replies; this one never opens them.
+- **Reads only your usage** — never your conversations, prompts, files, or code. Many usage trackers work by reading your `~/.claude/projects` conversation logs — down to the text of your prompts and replies; this one never opens those files.
 - **Talks only to Anthropic** — your token goes to Anthropic's own usage endpoint and nowhere else: no third-party servers, none of ours, no analytics.
 - **Open and auditable** — plain bash and python with no obfuscation; read it before you run it. Uninstalling removes everything and never touches your credentials.
 - **Tiny** — a small menu-bar script plus a light background refresh. That's the whole thing.
@@ -68,14 +68,14 @@ Kick off a long task and step away. When a Claude Code session **finishes** — 
 
 <p align="center"><img src="./docs/screenshots/alert-en.png" alt="The menu-bar gauge turns rainbow when a Claude Code session finishes or needs you — one click jumps back to Claude" width="392"></p>
 
-It's an **opt-in** extra layer, off by default — turn it on with one command:
+It's **on by default** — `./install.sh` sets it up for you. It reacts **only to Claude Code's own "finished" and "needs-permission" events** — it never reads your conversations or code, shows no pop-ups, and sends no telemetry. Setup safely merges its hooks into your `~/.claude/settings.json` (backed up first, idempotent, re-parsed for validity, and leaving any hooks you already have untouched), and `./uninstall.sh` removes only those entries again.
+
+Prefer to toggle it on its own?
 
 ```bash
-bash alert/install-alerts.sh          # turn it on
-bash alert/install-alerts.sh --uninstall   # turn it off
+bash alert/install-alerts.sh               # (re-)enable
+bash alert/install-alerts.sh --uninstall   # disable
 ```
-
-It reacts **only to Claude Code's own "finished" and "needs-permission" events** — it never reads your conversations or code, shows no pop-ups, and sends no telemetry. Installing safely merges two hooks into your `~/.claude/settings.json` (backed up first, idempotent, and leaving any hooks you already have untouched); uninstalling removes only its own entries.
 
 ## How it works (for the curious)
 

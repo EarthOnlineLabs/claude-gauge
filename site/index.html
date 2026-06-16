@@ -155,7 +155,7 @@
   .scene-cap b{color:var(--ink);font-weight:600}
   .leg .txt b{color:var(--ink);font-weight:600}
 
-  /* ---------- completion alert · "有新发现" (opt-in rainbow gauge) ---------- */
+  /* ---------- completion alert · "有新发现" (default-on rainbow gauge) ---------- */
   .alert-block{margin-top:48px}
   .alert-egg{max-width:360px;margin:0 auto}
   @media(max-width:680px){.alert-egg{max-width:100%}}
@@ -478,7 +478,7 @@
       </div>
     </div>
 
-    <!-- completion alert · "有新发现" — opt-in extra layer: the gauge goes rainbow when a Claude Code session finishes or needs you while you're away. Quota number keeps its color; only the icon turns rainbow. -->
+    <!-- completion alert · "有新发现" — on by default: the gauge goes rainbow when a Claude Code session finishes or needs you while you're away. Quota number keeps its color; only the icon turns rainbow. -->
     <div class="alert-block">
       <div class="alert-egg">
         <div class="scene scene-alert">
@@ -508,7 +508,7 @@
     <div class="priv-cmp">
       <div class="cmp-col cmp-them">
         <span class="cmp-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6 18 18M18 6 6 18"/></svg><span class="en">Other trackers read</span><span class="zh">别的工具读的是</span></span>
-        <p><span class="en">Your conversation logs — <code>~/.claude/projects/**/*.jsonl</code>, down to the text of your prompts and replies. Even the open-source ones read them.</span><span class="zh">你的对话记录——<code>~/.claude/projects/**/*.jsonl</code>，连你 prompt 和回复的原文都在里面。连开源的那些也要读它。</span></p>
+        <p><span class="en">Your conversation logs — <code>~/.claude/projects/**/*.jsonl</code>, down to the text of your prompts and replies. Many usage trackers read them.</span><span class="zh">你的对话记录——<code>~/.claude/projects/**/*.jsonl</code>，连你 prompt 和回复的原文都在里面。不少用量工具都要读它。</span></p>
       </div>
       <div class="cmp-col cmp-us">
         <span class="cmp-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg><span class="en">ClaudeGauge reads</span><span class="zh">ClaudeGauge 读的是</span></span>
