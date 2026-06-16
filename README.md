@@ -15,7 +15,7 @@
 
 [简体中文](README.zh-CN.md)
 
-![ClaudeGauge — the menu bar gauge and its expanded dropdown showing 5-hour and weekly usage](./docs/screenshots/showcase.png)
+![ClaudeGauge — the menu bar gauge and its expanded dropdown showing 5-hour and weekly usage](./docs/screenshots/showcase-en.png)
 
 When you're deep in Claude Code, the same question keeps nagging: *how much of my 5-hour limit is left? Am I about to hit the weekly wall?* Finding out means stopping to run `/usage` or open the [claude.ai usage page](https://claude.ai/settings/usage). ClaudeGauge keeps that number in the top-right of your menu bar, so you never have to break flow to check.
 
@@ -29,7 +29,7 @@ The whole tool is a single percentage that changes color as a limit gets closer.
 
 Click it for the full breakdown: your current 5-hour window and this week's window, each with a progress bar and a reset time. If the data goes stale, the number grays out — so you can always tell whether you're looking at something current.
 
-![ClaudeGauge in its warning and critical states — the gauge and dropdown turn amber at 75%, red at 90%, surfacing the window that's biting](./docs/screenshots/states.png)
+![ClaudeGauge in its warning and critical states — the gauge and dropdown turn amber at 75%, red at 90%, surfacing the window that's biting](./docs/screenshots/states-en.png)
 
 <sub>Whichever window is about to bite is the one that surfaces — amber for the 5-hour session, red for the weekly wall — each with its reset countdown.</sub>
 
@@ -65,6 +65,8 @@ Now the menu bar updates instantly as you use Claude Code — all local, zero co
 ## Completion alert — come back at the right moment
 
 Kick off a long task and step away. When a Claude Code session **finishes** — or **pauses to ask for your permission** — the menu-bar gauge lights up in rainbow to wave you back. One click brings the Claude app to the front and clears the rainbow. The percentage keeps its usual color; only the icon turns rainbow, so a quota warning is never masked.
+
+<p align="center"><img src="./docs/screenshots/alert-en.png" alt="The menu-bar gauge turns rainbow when a Claude Code session finishes or needs you — one click jumps back to Claude" width="392"></p>
 
 It's an **opt-in** extra layer, off by default — turn it on with one command:
 

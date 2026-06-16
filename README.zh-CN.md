@@ -16,7 +16,7 @@
 > 把 Claude Code 的额度放进菜单栏，瞟一眼就知道还剩多少。
 
 <p align="center">
-  <img src="docs/screenshots/showcase.png" alt="ClaudeGauge：菜单栏的用量药丸，点开后显示 5 小时和一周额度" width="760">
+  <img src="docs/screenshots/showcase-zh.png" alt="ClaudeGauge：菜单栏的用量药丸，点开后显示 5 小时和一周额度" width="760">
 </p>
 
 用 Claude Code 的时候，心里总惦记着一件事：*这个 5 小时窗口还剩多少？这周会不会撞墙？* 想知道答案，每次都得停下来打开 `/usage`、或翻到 [claude.ai 的用量页](https://claude.ai/settings/usage)。ClaudeGauge 把这个数字常驻在菜单栏右上角，看一眼就够了——不打断手头的事。
@@ -32,7 +32,7 @@
 点开它，是完整明细：当前 5 小时窗口和这一周窗口，各自带进度条和重置时间。数据要是太久没刷新，这个数字会变灰——所以你一眼能分清，看到的是不是当下的。
 
 <p align="center">
-  <img src="docs/screenshots/states.png" alt="ClaudeGauge 的橙色与红色状态：菜单栏和弹窗在 75% 变橙、90% 变红，冒出正在告急的那个窗口" width="760">
+  <img src="docs/screenshots/states-zh.png" alt="ClaudeGauge 的橙色与红色状态：菜单栏和弹窗在 75% 变橙、90% 变红，冒出正在告急的那个窗口" width="760">
 </p>
 
 <p align="center"><sub>哪个窗口快咬你，哪个就冒出来——5 小时会话变橙，一周硬墙变红，各带重置倒计时。</sub></p>
@@ -69,6 +69,8 @@ cd claude-gauge
 ## 完成提醒 ·「有新发现」
 
 把长任务丢给它，自己去忙别的。当某个 Claude Code 会话**完成**、或**停下来等你授权**时，菜单栏的表盘会亮起彩虹，把你叫回来。点一下就把 Claude 桌面 App 拉回前台，彩虹随即熄灭。百分比照常保持原来的颜色，只有图标变彩虹——额度告急不会被盖住。
+
+<p align="center"><img src="docs/screenshots/alert-zh.png" alt="会话完成或等你授权时，菜单栏表盘亮起彩虹——点一下跳回 Claude" width="392"></p>
 
 这是一个**可选**的附加层，默认不开——一条命令开启：
 
