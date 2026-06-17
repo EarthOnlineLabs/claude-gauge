@@ -95,4 +95,4 @@ ClaudeGauge 拆成三个互不依赖的小块，只通过 `~/.cache/claude-gauge
 
 ## 许可证
 
-[MIT](LICENSE) © [EarthOnline](https://github.com/EarthOnlineLabs)
+[MIT](LICENSE) © [EarthOnline Labs](https://github.com/EarthOnlineLabs)

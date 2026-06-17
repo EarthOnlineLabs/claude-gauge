@@ -91,4 +91,4 @@ For the full design — the layers, the display rules, and the data flow — see
 
 ## Contributing
 
-Issues and pull requests are welcome. ClaudeGauge is released under the [MIT License](LICENSE) by [EarthOnline](https://github.com/EarthOnlineLabs).
+Issues and pull requests are welcome. ClaudeGauge is released under the [MIT License](LICENSE) by [EarthOnline Labs](https://github.com/EarthOnlineLabs).
