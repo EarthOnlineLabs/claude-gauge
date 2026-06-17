@@ -45,7 +45,7 @@ A usage gauge has to read your account, so *how* it does that matters more than 
 ## Install
 
 ```bash
-git clone https://github.com/EarthOnlineDev/claude-gauge.git
+git clone https://github.com/EarthOnlineLabs/claude-gauge.git
 cd claude-gauge
 ./install.sh
 ```
@@ -91,4 +91,4 @@ For the full design — the layers, the display rules, and the data flow — see
 
 ## Contributing
 
-Issues and pull requests are welcome. ClaudeGauge is released under the [MIT License](LICENSE) by [EarthOnline](https://github.com/EarthOnlineDev).
+Issues and pull requests are welcome. ClaudeGauge is released under the [MIT License](LICENSE) by [EarthOnline](https://github.com/EarthOnlineLabs).

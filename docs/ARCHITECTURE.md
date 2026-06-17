@@ -479,4 +479,4 @@ open "swiftbar://refreshallplugins"
 
 **卸载**：`./uninstall.sh`。
 
-协议：MIT。组织：EarthOnline（GitHub org `earthonline` / `EarthOnlineDev`）。
+协议：MIT。组织：EarthOnline Labs（GitHub org `EarthOnlineLabs`）。

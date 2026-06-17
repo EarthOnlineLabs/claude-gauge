@@ -16,7 +16,7 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 - **绝不显示骗人的旧数据**：数据超过 15 分钟没更新就变灰加 `~` 并在下拉里警告。
 - **自愈 token（零额度）**：Claude Code 闲置导致钥匙串 token 过期时，刷新器用 refresh token 直接走 OAuth 刷新续命，零额度消耗、无需人工干预。
 
-协议 MIT。组织 EarthOnline（GitHub org `earthonline` / `EarthOnlineDev`）。
+协议 MIT。组织 EarthOnline Labs（GitHub org `EarthOnlineLabs`）。
 
 菜单栏效果见 `docs/screenshots/menubar.png`（显示形如 "49%"）。
 
@@ -112,7 +112,7 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 
 - **线上落地页**：https://claude-gauge.earthonline.site （HTTP 200）。已按 **EarthOnline / AISelf v0.6 设计语言换皮**（宋体/Fraunces 衬线 + 光谱点缀），字体**自托管、零第三方请求**。形态与**发布流程见 §9**（注意：部署必须带上 `site/fonts/` + `site/favicon.*`）。
   - **品牌 logo（新增，2026-06）**：分段光谱**仪表盘** logo（内联 SVG `#logo`，∞ 标记的「仪表」同胞），上导航品牌 + 页脚品牌 + favicon 均已用；README（双语）顶部加 `<picture>` logo（明暗主题切 PNG）。**菜单栏 mock 仍单色 `#dial`**（演示变色卖点，未动）。资产见 §8、细节见 §9.1。✅ **已发布**（commit `97e9201` 推 origin/main；落地页已 deploy 上线，`/favicon.svg`·`/favicon.png` 同源 200）。
-- **开源仓库**：https://github.com/EarthOnlineDev/claude-gauge （PUBLIC，`HEAD == origin/main`，工作区干净已推送）
+- **开源仓库**：https://github.com/EarthOnlineLabs/claude-gauge （PUBLIC，`HEAD == origin/main`，工作区干净已推送）
 - **运行时**：launchd 任务 `dev.earthonline.claude-gauge` 已加载运行；`~/.cache/claude-gauge/cache.json` 数据新鲜；SwiftBar 插件已装。
 - **安装一致性**：三个已安装文件与 repo **字节级一致**（经审计 `diff` 零差异）。
 

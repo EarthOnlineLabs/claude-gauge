@@ -49,7 +49,7 @@
 ## 安装
 
 ```bash
-git clone https://github.com/EarthOnlineDev/claude-gauge.git
+git clone https://github.com/EarthOnlineLabs/claude-gauge.git
 cd claude-gauge
 ./install.sh
 ```
@@ -95,4 +95,4 @@ ClaudeGauge 拆成三个互不依赖的小块，只通过 `~/.cache/claude-gauge
 
 ## 许可证
 
-[MIT](LICENSE) © [EarthOnline](https://github.com/EarthOnlineDev)
+[MIT](LICENSE) © [EarthOnline](https://github.com/EarthOnlineLabs)
