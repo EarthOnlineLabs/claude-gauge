@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **The completion alert no longer turns rainbow while you're at your computer.**
+  It used to flip to rainbow whenever the Claude window wasn't the frontmost app
+  at the exact instant a turn finished — so briefly switching to another app
+  (e.g. a browser) while you were sitting right there still triggered it. The
+  alert now also checks how long you've actually been idle and only lights when
+  the turn finishes after you've been away from the keyboard for ≥90s (genuinely
+  stepped away), not when you're present and just app-switching. It reads only
+  the system idle *duration* (via IOKit `HIDIdleTime`) — never any app content,
+  no permission prompt. `attention.json` gains an `idle` field; the threshold is
+  the tunable `AWAY_SEC` in the plugin.
 - **The gauge now survives a reboot / power-off.** SwiftBar (the menu-bar host
   that runs the plugin) was never registered to launch at login, so after a full
   shutdown it didn't come back — and because the "show/hide with Claude" logic

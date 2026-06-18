@@ -4,7 +4,7 @@
 #
 # 隐私红线：本脚本【绝不读 stdin】。Claude Code 会把含 transcript_path 的 JSON
 # 灌到 stdin，但我们整条忽略——事件类型由 hook 的 matcher 在 CC 层就分好了，
-# 我们只记「时间戳 + 事件名 + 触发那刻的前台 App」。从不碰对话/代码/会话路径。
+# 我们只记「时间戳 + 事件名 + 触发那刻的前台 App + 系统空闲时长」。从不碰对话/代码/会话路径。
 #
 # 形态：极小、纯副作用、任何异常都安全降级、永远 exit 0（不阻塞 CC，也不破坏任何东西）。
 import sys, os, json, time, tempfile, subprocess
@@ -90,6 +90,21 @@ def front_bundle():
         return "unknown"
 
 
+def idle_secs():
+    """系统自上次键鼠输入以来的空闲秒数（IOKit HIDIdleTime）。只读「距上次输入多久」这一个
+    时长，不读任何内容、不弹授权。用来判断你是「真离开了」还是只是切了下窗口/还在用电脑。
+    取不到 → 0.0（视作'你在用'，宁可不打扰也不误判你已离开）。"""
+    try:
+        out = subprocess.run(["/usr/sbin/ioreg", "-c", "IOHIDSystem"],
+                             capture_output=True, text=True, timeout=2).stdout
+        for line in out.splitlines():
+            if "HIDIdleTime" in line:
+                return int(line.rsplit("=", 1)[1].strip()) / 1_000_000_000
+    except Exception:
+        pass
+    return 0.0
+
+
 def ping_refresh():
     """让菜单栏即时重画（-g 不抢焦点）。失败静默。"""
     try:
@@ -105,7 +120,7 @@ def main():
         ev = sys.argv[2] if len(sys.argv) > 2 else "stop"   # stop | permission
         # 注意：不读 sys.stdin。点亮只依赖 (事件名 + 当前前台 + 会话宿主)。
         now = time.time()
-        awrite(ATTN, {"ts": now, "event": ev, "front": front_bundle(), "host": session_host()})
+        awrite(ATTN, {"ts": now, "event": ev, "front": front_bundle(), "host": session_host(), "idle": idle_secs()})
         awrite(SEEN, {"ts": now})    # ① 喂 linger：刚完成 → 菜单栏在 linger 窗口内必显示（含彩虹）
         ping_refresh()
     elif mode == "open":

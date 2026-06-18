@@ -128,11 +128,13 @@ def _awrite_ack(ts):
 def _ts(x):
     try: return float(x or 0)
     except Exception: return 0.0
+AWAY_SEC=90.0   # 完成那刻「已空闲 ≥ 此秒数」才算你真的离开了；只是切了下窗口/还在用电脑(空闲≈0)→ 不点亮
 def _armed():
-    """有未读完成/需关注事件，且事件发生时你不在 Claude 前台 → 点亮彩虹。"""
+    """有未读完成/需关注事件，且事件发生时你确实离开了（不在载体前台 且 已空闲）→ 点亮彩虹。"""
     att=_loadj(ATTN)
     if not att or "ts" not in att: return False
     if att.get("front")==(att.get("host") or CLAUDE_BUNDLE): return False   # 触发时你已在会话载体(终端/桌面)前台 → 不点亮
+    if _ts(att.get("idle")) < AWAY_SEC: return False                        # 触发时你还在用电脑(没空闲) → 你没离开，只是切了下窗 → 不点亮
     return _ts(att.get("ts")) > _ts((_loadj(ACK) or {}).get("ts"))
 
 def title_line(fh,wk,d,stale=False,armed=False):
