@@ -4,8 +4,8 @@
 # 形状来源 = 落地页 **GaugeMark**（设计蓝图的半圆表盘：半圆刻度 + 指针 + 圆心），
 # 与 designonline-ui 换肤后的落地页/HeroLive 表盘**逐路径一致**，确保菜单栏工具与网页 demo 同形。
 #   path 半圆刻度 = M3.6 16.4a8.4 8.4 0 0 1 16.8 0 ; 指针 = M12 16.4 16.6 10.6 ; 圆心 = (12,16.4) r1.7
-# 用 24×24 方形视框（与落地页 GaugeMark 的 viewBox 0 0 24 24 同框），方形渲染→与 demo 取景一致。
-# 描边 2.2（与落地页 GaugeMark 同值；在 18px 显示下有效 ~1.65px，与菜单栏 SF 符号和谐）。
+# 紧裁到表盘外框（半圆填满菜单栏槽位 → 有存在感，不发虚像"失效"）；形状仍是落地页 GaugeMark。
+# 描边 2.4（紧裁后下采样少→有效更粗，单色 templateImage 蒙版更实，不发灰）。
 #
 # 五态各渲一张 @2x PNG：
 #   ICON_OK    单色蒙版（templateImage 用 alpha，自动随真实菜单栏深浅变黑/白；RGB 被丢弃）
@@ -23,7 +23,7 @@ command -v rsvg-convert >/dev/null || { echo "需要 rsvg-convert：brew install
 python3 - "$TMP" <<'PY'
 import sys
 tmp = sys.argv[1]
-SW, HUB_R, VB = "2.2", "1.7", "0 0 24 24"
+SW, HUB_R, VB = "2.4", "1.7", "1.4 5.8 21.2 13.4"
 ARC    = "M3.6 16.4a8.4 8.4 0 0 1 16.8 0"   # 半圆刻度（= 落地页 GaugeMark）
 NEEDLE = "M12 16.4 16.6 10.6"               # 指针
 SPEC   = ["#8A43E6","#4FA8F0","#1FA45D","#F4811E","#E8482A"]  # 五段神经光谱（hex 不改）
@@ -51,10 +51,10 @@ open(f"{tmp}/ic_rain.svg","w").write(rainbow())          # 五段光谱（身份
 PY
 
 for n in ok warn crit stale rain; do
-  rsvg-convert -w 36 -h 36 "$TMP/ic_$n.svg" -o "$TMP/ic_$n.png"   # @2x（显示 18×18 逻辑点，方形与 demo 同框）
+  rsvg-convert -h 32 "$TMP/ic_$n.svg" -o "$TMP/ic_$n.png"   # @2x（按紧裁宽高比出图，显示 ~25×16 逻辑点）
 done
 
-echo "=== 把下面 5 个常量粘回 plugin/claude-gauge.15s.sh（ICON_SZ 用 width=18 height=18）==="
+echo "=== 把下面 5 个常量粘回 plugin/claude-gauge.15s.sh（ICON_SZ 用 width=25 height=16）==="
 for pair in OK:ok WARN:warn CRIT:crit STALE:stale RAINBOW:rain; do
   name="${pair%%:*}"; file="${pair##*:}"
   printf 'ICON_%s="%s"\n' "$name" "$(base64 < "$TMP/ic_$file.png" | tr -d '\n')"
