@@ -7,7 +7,7 @@
 #
 # 五态各渲一张 @2x PNG，紧裁到表盘外框，再 base64：
 #   ICON_OK    单色蒙版（templateImage 用 alpha，自动随真实菜单栏深浅变黑/白）
-#   ICON_WARN  橙 #e08a2b   ICON_CRIT 红 #e0483d   ICON_STALE 灰 #9a9a9a
+#   ICON_WARN  橙 #C2902E   ICON_CRIT 红 #C0492B   ICON_STALE 灰 #9CA0A2  （= DesignOnline token 值）
 #   ICON_RAINBOW 原样彩虹（紫→红硬分段 + 深针 + 白芯，= 落地页 logo 本体、按菜单栏重量减细）
 #
 # 实测（2026-06，当前 macOS + SwiftBar）：用干净矢量出图时 templateImage 与 image= 在菜单栏【均无框】，
@@ -47,10 +47,12 @@ def solid(color):
     t = t.replace(f'<circle cx="12" cy="12" r="{PIP_R}" fill="#FFFFFF"/>', '')      # 单色态去白芯，实心轴
     return t
 
-open(f"{tmp}/ic_ok.svg","w").write(solid("#1d1d1f"))
-open(f"{tmp}/ic_warn.svg","w").write(solid("#e08a2b"))
-open(f"{tmp}/ic_crit.svg","w").write(solid("#e0483d"))
-open(f"{tmp}/ic_stale.svg","w").write(solid("#9a9a9a"))
+# 配色对齐 DesignOnline token：ink-900 / warning=amber-700 / danger=red-700 / 过期=text-subtle(ink-500)。
+# 注：ic_ok 在插件里走 templateImage（只用 alpha 蒙版，RGB 被 macOS 丢弃），此色仅作记录。
+open(f"{tmp}/ic_ok.svg","w").write(solid("#1B1B1B"))
+open(f"{tmp}/ic_warn.svg","w").write(solid("#C2902E"))
+open(f"{tmp}/ic_crit.svg","w").write(solid("#C0492B"))
+open(f"{tmp}/ic_stale.svg","w").write(solid("#9CA0A2"))
 open(f"{tmp}/ic_rain.svg","w").write(base())   # 彩虹弧 + 黑针 + 白芯（= 品牌 logo 本体）
 PY
 

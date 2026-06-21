@@ -1,0 +1,12 @@
+/* 自托管字体（与 designonline-ui 字体栈同名）——保持「无第三方运行时请求」。
+   designonline-ui/styles.css 里的外部字体 @import 已由 scripts/strip-remote-fonts.mjs 剥离，
+   这里用本地 woff2 提供同名家族：Noto Serif SC / JetBrains Mono / Fraunces。
+   宋体/苹方（Songti SC / PingFang SC）走系统字，无需自托管。 */
+@font-face{font-family:'Noto Serif SC';font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/noto-serif-sc-400.woff2) format('woff2')}
+@font-face{font-family:'Noto Serif SC';font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/noto-serif-sc-600.woff2) format('woff2')}
+@font-face{font-family:'Noto Serif SC';font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/noto-serif-sc-700.woff2) format('woff2')}
+@font-face{font-family:'Noto Serif SC';font-style:normal;font-weight:900;font-display:swap;src:url(/fonts/noto-serif-sc-900.woff2) format('woff2')}
+@font-face{font-family:'Fraunces';font-style:italic;font-weight:400 600;font-display:swap;src:url(/fonts/fraunces-italic-400_600.woff2) format('woff2')}
+@font-face{font-family:'Fraunces';font-style:normal;font-weight:400 700;font-display:swap;src:url(/fonts/fraunces-normal-400_700.woff2) format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:500;font-display:swap;src:url(/fonts/jetbrainsmono-normal-500.woff2) format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/jetbrainsmono-normal-700.woff2) format('woff2')}
