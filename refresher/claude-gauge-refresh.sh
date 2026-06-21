@@ -9,7 +9,7 @@
 [ "$1" = "refresh" ] && export CQ_REFRESH=1
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 /usr/bin/python3 <<'PY'
-import json, subprocess, time, os, tempfile, urllib.request
+import json, subprocess, time, os, tempfile, urllib.request, urllib.error
 CACHE=os.path.expanduser("~/.cache/claude-gauge/cache.json")
 STATE=os.path.expanduser("~/.cache/claude-gauge/refresh-state.json")
 CLIENT_ID="9d1c250a-e61b-44d9-88ed-5944d1962f5e"
@@ -49,30 +49,41 @@ def kc_account():
     except Exception: pass
     return os.environ.get("USER","")
 def refresh_oauth(blob):
-    """零额度续命：refresh_token 换新 access_token，原地写回钥匙串（只改3字段，保留其余）。返回新 claudeAiOauth 或 None"""
+    """零额度续命：refresh_token 换新 access_token，原地写回钥匙串（只改3字段，保留其余）。
+    返回 (新 claudeAiOauth 或 None, 是否 invalid_grant)。invalid_grant=钥匙串里的 RT 已被服务端作废，
+    续命无解、唯有用户在 CC 里 /login 重新登录能救 —— 用于点亮诚实失败态，区别于网络抖动（后者不算 dead）。"""
     try:
         rt=blob["claudeAiOauth"]["refreshToken"]
         body=json.dumps({"grant_type":"refresh_token","refresh_token":rt,"client_id":CLIENT_ID}).encode()
         req=urllib.request.Request(TOKEN_URL,data=body,headers={"Content-Type":"application/json","User-Agent":UA,"Accept":"application/json"},method="POST")
         r=json.load(urllib.request.urlopen(req,timeout=20))
         at=r.get("access_token")
-        if not at: return None
+        if not at: return None,False
         nb=json.loads(json.dumps(blob))
         nb["claudeAiOauth"]["accessToken"]=at
         if r.get("refresh_token"): nb["claudeAiOauth"]["refreshToken"]=r["refresh_token"]
         nb["claudeAiOauth"]["expiresAt"]=int(time.time()*1000)+(r.get("expires_in") or 28800)*1000
         w=subprocess.run([SEC,"add-generic-password","-U","-s",SERVICE,"-a",kc_account(),"-w",json.dumps(nb,separators=(',',':'))],capture_output=True,text=True,timeout=10)
-        if w.returncode!=0: return None
-        return nb["claudeAiOauth"]
-    except Exception: return None
+        if w.returncode!=0: return None,False
+        return nb["claudeAiOauth"],False
+    except urllib.error.HTTPError as e:
+        try: dead = (e.code==400 and "invalid_grant" in e.read().decode("utf-8","replace"))
+        except Exception: dead=False
+        return None,dead
+    except Exception: return None,False
 
 st=load(STATE,{}); now=time.time()
 blob=kc_read()
 tk=blob.get("claudeAiOauth") if blob else None
+auth_dead=bool(st.get("auth_dead"))
 # ① 续命：仅临近过期(≤60s)或被强制时（纯鉴权，零额度，不与活跃 CC 抢轮换）
 if blob and tk and tk.get("expiresAt") and (os.environ.get("CQ_REFRESH")=="1" or tk["expiresAt"]/1000 < now+60):
-    new=refresh_oauth(blob)
-    if new: tk=new
+    new,dead=refresh_oauth(blob)
+    if new: tk=new; auth_dead=False
+    elif dead: auth_dead=True
+# 续命被服务端拒（RT 失效）→ 立刻持久化诚实失败态供菜单栏提示 /login（早于节流/退出；恢复时由成功 poll 收尾清零）
+if auth_dead != bool(st.get("auth_dead")):
+    st["auth_dead"]=auth_dead; st["auth_dead_ts"]=now; awrite(STATE,st)
 # ② 节流：到点才 poll
 lm=st.get("last_max_util"); chg=st.get("changed",False)
 iv = 45 if (lm is not None and lm>=90) else (60 if (lm is not None and lm>=75) else (60 if chg else 240))
@@ -94,6 +105,6 @@ awrite(CACHE,{"ts":now,"data":data})
 u5=(j.get("five_hour") or {}).get("utilization"); u7=(j.get("seven_day") or {}).get("utilization")
 p5,p7=st.get("last_5h"),st.get("last_7d")
 chg_now = (u5 is not None and p5 is not None and abs(u5-p5)>=1) or (u7 is not None and p7 is not None and abs(u7-p7)>=1)
-st.update({"last_poll_ts":now,"last_max_util":max([x for x in (u5,u7) if x is not None],default=None),"last_5h":u5,"last_7d":u7,"changed":chg_now})
+st.update({"last_poll_ts":now,"last_max_util":max([x for x in (u5,u7) if x is not None],default=None),"last_5h":u5,"last_7d":u7,"changed":chg_now,"auth_dead":False})
 awrite(STATE,st)
 PY

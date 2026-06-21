@@ -77,10 +77,35 @@ else
   warn "未找到 alert/install-alerts.sh，跳过完成提醒层"
 fi
 
+# 6b. 实时增强（默认接通）：把 statusLine 桥接幂等合并进 ~/.claude/settings.json。
+#     你用 Claude Code(终端 CLI)时 CC 把实时 rate_limits 喂给桥接 → 菜单栏即时刷新，且零 token/零钥匙串，
+#     对「钥匙串令牌过期/失效导致卡死」那类问题免疫。先备份、回解析校验、原子写；已有别的 statusLine 绝不覆盖。
+#     非致命：settings.json 异常/已指向本桥接 → 安全跳过。⚠️ 桌面版 Claude.app 会话不执行 statusLine，此增强只对终端 CLI 生效。uninstall.sh 对称移除。
+echo
+BRIDGE="$HOME/.claude/claude-gauge-statusline.py"
+/usr/bin/python3 - "$BRIDGE" <<'PY' || warn "实时增强未接通（settings.json 异常已跳过，不影响菜单栏每分钟级更新）"
+import json, os, sys, shutil, time
+P=os.path.expanduser("~/.claude/settings.json"); bridge=sys.argv[1]
+raw=open(P).read() if os.path.exists(P) else ""
+try: cfg=json.loads(raw) if raw.strip() else {}
+except Exception:
+    print("  · settings.json 非合法 JSON，跳过实时增强——修好后可手动把 statusLine 指向桥接。"); raise SystemExit(0)
+cur=cfg.get("statusLine")
+if isinstance(cur,dict) and (cur.get("command") or "")==bridge:
+    print("  · 实时增强已接通（statusLine 已指向本桥接）。"); raise SystemExit(0)
+if cur:
+    print("  · 检测到你已有自定义 statusLine → 不覆盖。如需实时增强，把它的 command 改成指向：")
+    print("    "+bridge); raise SystemExit(0)
+cfg["statusLine"]={"type":"command","command":bridge}
+if os.path.exists(P):
+    bak=f"{P}.claude-gauge.bak.{int(time.time())}"; shutil.copy2(P,bak); tail=f"（已备份 → {bak}）"
+else:
+    os.makedirs(os.path.dirname(P),exist_ok=True); tail=""
+out=json.dumps(cfg, indent=2, ensure_ascii=False); json.loads(out)  # 回解析校验
+tmp=P+".tmp"; open(tmp,"w").write(out+"\n"); os.replace(tmp,P)
+print(f"  · 实时增强已接通：statusLine → 桥接{tail}。")
+PY
+
 echo
 ok "安装完成！菜单栏右上角应出现用量百分比。"
-echo
-say "可选（实时增强）：让 Claude Code 把实时额度喂给本工具"
-echo "  在 ~/.claude/settings.json 里加（若已有 statusLine 需自行合并）："
-echo '    "statusLine": { "type": "command", "command": "'"$HOME"'/.claude/claude-gauge-statusline.py" }'
-echo "  这样你用 Claude Code 时菜单栏即时刷新；不加也能每分钟自动更新。"
+echo "  · 用 Claude Code（终端）时菜单栏即时刷新；任何时候后台都每分钟级自动更新。"

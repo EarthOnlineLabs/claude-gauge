@@ -14,7 +14,7 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 - **口径与 Claude Code `/usage` 一致**：显示「已用 %」，越大越满（同源端点 `api.anthropic.com/api/oauth/usage`）。
 - **够用就静默，不够才报警**：默认近黑、只显当前 5 小时窗口；只有窗口紧张时才上色、显倒计时、显周窗口。
 - **绝不显示骗人的旧数据**：数据超过 15 分钟没更新就变灰加 `~` 并在下拉里警告。
-- **自愈 token（零额度）**：Claude Code 闲置导致钥匙串 token 过期时，刷新器用 refresh token 直接走 OAuth 刷新续命，零额度消耗、无需人工干预。
+- **自愈 token（零额度）**：Claude Code 闲置导致钥匙串 token 过期时，刷新器用 refresh token 直接走 OAuth 刷新续命，零额度消耗、无需人工干预。若 refresh token 已被服务端作废（无法自愈），菜单栏不再误导，而是诚实提示去 `/login` 重新登录（`auth_dead`，见 §2.2）。
 
 协议 MIT。组织 EarthOnline Labs（GitHub org `EarthOnlineLabs`）。
 
@@ -47,36 +47,37 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 ### 2.1 渲染层 `plugin/claude-gauge.15s.sh`
 
 - SwiftBar 每 15 秒执行一次（文件名 `.15s.` 即刷新周期）。
-- 读 `live.json` 与 `cache.json`，取 `ts` 较新的一份渲染（`plugin/claude-gauge.15s.sh:216-218`）。
-- **随 Claude 显隐（①）**：渲染前先 `_active()` 门控——Claude（桌面端或命令行）没在用时输出空 → SwiftBar 隐藏整个菜单栏项（`plugin/claude-gauge.15s.sh:32-46`，仅查进程/App、不读内容，带 120s linger 抹平 `claude -p` 闪烁）。详见 `docs/ARCHITECTURE.md` §4.0。
-- **兜底自拉**：若两份缓存都缺失或最新一份超过 150 秒，插件自己从钥匙串读 token 直接调一次 API 写回 `cache.json`（`plugin/claude-gauge.15s.sh:219-226`）。后台刷新器正常工作时这条几乎不触发。
+- 读 `live.json` 与 `cache.json`，取 `ts` 较新的一份渲染（`plugin/claude-gauge.15s.sh:223-225`）。
+- **随 Claude 显隐（①）**：渲染前先 `_active()` 门控——Claude（桌面端或命令行）没在用时输出空 → SwiftBar 隐藏整个菜单栏项（`plugin/claude-gauge.15s.sh:33-47`，仅查进程/App、不读内容，带 120s linger 抹平 `claude -p` 闪烁）。详见 `docs/ARCHITECTURE.md` §4.0。
+- **兜底自拉**：若两份缓存都缺失或最新一份超过 150 秒，插件自己从钥匙串读 token 直接调一次 API 写回 `cache.json`（`plugin/claude-gauge.15s.sh:226-233`）。后台刷新器正常工作时这条几乎不触发。
 - **显示逻辑（状态感知的单一信号灯）**：
-  - 显示已用 %，带 `%`；5 小时窗口无前缀，一周窗口加 `W` 前缀（`title_line`，`:140-164`）。
+  - 显示已用 %，带 `%`；5 小时窗口无前缀，一周窗口加 `W` 前缀（`title_line`，`:143-167`）。
   - 够用（两个窗口都 OK）→ 只显当前 5h 已用 %、近黑自适应色、藏掉周。
   - 不够 → 只显「正在咬人」的那个窗口 + 橙/红 + 重置倒计时；两个都报警显更严重的；周一旦紧急（≥90%）优先（7 天是硬墙）。
 - **阈值**（注意脚本内部用的是「剩余 %」，与对外的「已用 %」互补）：
   - 已用 `<75%` 够用 / `75–89%` 需关注（橙 `#e08a2b`）/ `≥90%` 紧急（红 `#e0483d`）。
-  - 代码里以剩余值表达：`WARN_TH=25.0` `CRIT_TH=10.0`（`plugin/claude-gauge.15s.sh:57`，即剩余 ≤25% 警告、≤10% 紧急）。
-  - 配色去绿；够用 = 近黑，按系统深浅色自适应（`NORMAL` 在 `:59-62` 由 `AppleInterfaceStyle` 决定）。
-- **宽度受限**：带刘海的 Mac，菜单栏标题须 ≤ 约 11 字符（`MAXW=11`，`:64`），否则会被刘海吞掉整条消失。`extra_usage`（超额消费）的 `+$` 标记只在不超宽时才加（`:156`）。
-- **诚实陈旧**：`STALE_SEC=900`（15 分钟，`:20`）。超过则菜单栏变灰加 `~`，下拉里显示「数据已 N 分钟未更新」（`render`，`:172-201`）。
+  - 代码里以剩余值表达：`WARN_TH=25.0` `CRIT_TH=10.0`（`plugin/claude-gauge.15s.sh:58`，即剩余 ≤25% 警告、≤10% 紧急）。
+  - 配色去绿；够用 = 近黑，按系统深浅色自适应（`NORMAL` 在 `:61-65` 由 `AppleInterfaceStyle` 决定）。
+- **宽度受限**：带刘海的 Mac，菜单栏标题须 ≤ 约 11 字符（`MAXW=11`，`:67`），否则会被刘海吞掉整条消失。`extra_usage`（超额消费）的 `+$` 标记只在不超宽时才加（`:159`）。
+- **诚实陈旧**：`STALE_SEC=900`（15 分钟，`:21`）。超过则菜单栏变灰加 `~`，下拉里显示「数据已 N 分钟未更新」；若续命被服务端 `invalid_grant` 拒（`auth_dead`）则改显「登录已失效 · 去 `/login`」（`render`，`:175-208`，见 §2.2 与 `docs/ARCHITECTURE.md` §6.4）。
 - **下拉每行显式上色**：SwiftBar 会把「无动作 + 无颜色」的行渲染成禁用灰，因此每行都显式设了 `color=`（见 `section` 与 `render`）。进度条放大为主信息（`size=15`），倒计时为辅（小灰字 `size=11`）。
-- 下拉底部有「立即刷新」按钮，调 `~/.claude/claude-gauge-refresh.sh force`（`:197`）；其后（仅当装了稳定卸载脚本 `~/.claude/claude-gauge-uninstall.sh` 时）有 `管理 ▸ 卸载 ClaudeGauge…` 子菜单，`terminal=true` 在 Terminal 里跑卸载（②，`:198-201`，见 `docs/ARCHITECTURE.md` §8.6）。
+- 下拉底部有「立即刷新」按钮，调 `~/.claude/claude-gauge-refresh.sh force`（`:204`）；其后（仅当装了稳定卸载脚本 `~/.claude/claude-gauge-uninstall.sh` 时）有 `管理 ▸ 卸载 ClaudeGauge…` 子菜单，`terminal=true` 在 Terminal 里跑卸载（②，`:205-208`，见 `docs/ARCHITECTURE.md` §8.6）。
 
 ### 2.2 数据层 `refresher/claude-gauge-refresh.sh`
 
 - 由 LaunchAgent 触发，label `dev.earthonline.claude-gauge`，`StartInterval=30`（每 30 秒唤醒）。
 - **随 Claude 暂停轮询（①）**：脚本最前面有 `_claude_running()` + 早退守卫（`refresher/claude-gauge-refresh.sh:20-27`，同渲染层、只查进程/App）——非 force/refresh 且 Claude 没在用时直接退出、不轮询不续命，后台轮询随 Claude 关闭而暂停。
-- **自适应节流**（`refresher/claude-gauge-refresh.sh:77-79`）：唤醒后先看上轮状态决定是否真的 poll。间隔 `iv`：
+- **自适应节流**（`refresher/claude-gauge-refresh.sh:88-90`）：唤醒后先看上轮状态决定是否真的 poll。间隔 `iv`：
   - 紧急（max 已用 ≥90%）→ 45s
   - 需关注（≥75%）或刚变化过 → 60s
   - 够用且静止 → 240s（防 429）
   - 未到间隔直接 `raise SystemExit(0)`；`force` 参数跳过节流。
 - **自愈 token（关键创新，零额度）**：token 在 60 秒内到期时（`now+60`），用钥匙串里的 refresh token 向 `https://platform.claude.com/v1/oauth/token` 发一次 OAuth 刷新（`refresh_oauth()`），换回新 token 并**原地写回钥匙串**——纯鉴权调用，零额度消耗。只改 `claudeAiOauth` 三字段、保留 `mcpOAuth` 等其余内容；refresh token 会轮换故必须写回。卡 60 秒是为了避开与活跃 CC（提前 5 分钟自刷新）抢轮换。
-- 从 macOS 钥匙串 `Claude Code-credentials` 读出完整凭证 blob 做鉴权（`kc_read()`，`:37-42`）；调用时带 `Authorization: Bearer <accessToken>`（`:83`）。
-- 调 `https://api.anthropic.com/api/oauth/usage`，header 带 `anthropic-beta: oauth-2025-04-20`（`:83`）。
+- **续命彻底失败的诚实失败态（auth_dead → /login）**：当钥匙串里的 refresh token 已被服务端作废（CC 活跃使用时自己轮换了 token、但新 token 只留在内存没回写钥匙串），续命会收到 `400 invalid_grant`、**无法自愈**（有效 token 只在 CC 内存里、外部读不到）。此时 `refresh_oauth()` 返回 `dead=True`，刷新器把 `auth_dead` 写进 `refresh-state.json`；渲染层据此把陈旧文案从「闲置/限流；用一下 Claude Code 即刷新」换成「⚠️ 登录已失效 · 在 Claude Code 里运行 `/login`」——避免误导（用户正在用 CC 也好不了）。用户 `/login` 后下一次成功 poll 自动清 `auth_dead` 复原。**失败路径绝不写 keychain**。完整机制见 `docs/ARCHITECTURE.md` §6.4。
+- 从 macOS 钥匙串 `Claude Code-credentials` 读出完整凭证 blob 做鉴权（`kc_read()`，`:37-42`）；调用时带 `Authorization: Bearer <accessToken>`（`:94`）。
+- 调 `https://api.anthropic.com/api/oauth/usage`，header 带 `anthropic-beta: oauth-2025-04-20`（`:94`）。
 - **原子写** `cache.json`：先写临时文件再 `os.replace`（`awrite`，`:32-36`），防止插件读到半截 JSON。
-- 状态持久化在 `refresh-state.json`：`last_poll_ts` / `last_max_util` / `last_5h` / `last_7d` / `changed`（`:97`）。
+- 状态持久化在 `refresh-state.json`：`last_poll_ts` / `last_max_util` / `last_5h` / `last_7d` / `changed` / `auth_dead`（`:108`）。`auth_dead` 在续命收到 `400 invalid_grant` 时置真、成功 poll 时清零，供渲染层把陈旧文案切成「登录已失效 · 去 /login」（见下「续命彻底失败的诚实失败态」）。
 
 ### 2.3 桥接层（可选）`bridge/claude-gauge-statusline.py`
 
@@ -84,7 +85,8 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 - 从 `rate_limits.five_hour` / `seven_day` 读 `used_percentage` + `resets_at`（Unix 秒，转成 ISO 写出，`iso()`，`:8-10`）。
 - 写 `~/.cache/claude-gauge/live.json`（`:16-21`），并向 stdout 输出一行状态栏文本（形如 `◔ 5h 12%  ·  周 34%`）。
 - 价值：**用 CC 时菜单栏即时刷新，不需 API / token，零成本**。
-- 限制：仅对配置 `statusLine` **之后新开的会话**生效；若用户已有 `statusLine` 需手动合并。
+- **默认接通**：`install.sh`（step 6b）现在会**幂等**把 statusLine 合并进 `~/.claude/settings.json`（已有别的 statusLine 则**不覆盖**、只提示；非致命）；`uninstall.sh` 对称移除（仅删指向本桥接的那条）。无需手动加。
+- 限制：仅对配置 `statusLine` **之后新开的会话**生效；**且只在终端 CLI 会话执行——桌面版 Claude.app 的会话不跑命令型 `statusLine`，故桥接对桌面端用户无效**（桌面端遇到令牌失效只能靠 §2.2 的 `/login` 提示）。
 
 ### 2.4 提醒层（默认开 · 随 install.sh 自动启用）`alert/claude-gauge-alert.py`
 
@@ -121,8 +123,9 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 - [x] 渲染层：状态感知信号灯、深浅色自适应、刘海宽度保护、陈旧检测、下拉详情、立即刷新按钮、插件自拉兜底。
 - [x] **① 随 Claude 显隐**：Claude（桌面端或命令行）没在用时菜单栏项隐藏（输出空 → SwiftBar 隐藏），重开/起会话自动重现；带 120s linger 抹平 `claude -p` 闪烁；渲染层 + 数据层对称门控，只查进程/App、不读内容（`docs/ARCHITECTURE.md` §4.0）。
 - [x] 数据层：LaunchAgent 自适应节流、原子写、**token 零额度自愈续命**、随 Claude 暂停轮询（①）。
-- [x] 桥接层：CC statusLine 即时写 `live.json`（可选增强；纯本地、零网络、零额度）。
-- [x] 安装 / 卸载脚本：`install.sh` 装 SwiftBar（如缺）、铺组件、写并加载 LaunchAgent、首拉数据、**装稳定卸载脚本到 `~/.claude/`（②）**、**step 6 默认启用完成提醒层（合并 hook 进 `settings.json`，非致命）**；`uninstall.sh` 反向清理（含对称移除我们的 hook + 删 alert 脚本）且不碰 CC 凭证与数据、不动用户其它 hook。
+- [x] 桥接层：CC statusLine 即时写 `live.json`（**默认由 install.sh 接通**；纯本地、零网络、零额度；**仅终端 CLI 生效，桌面 App 会话不执行 statusLine**）。
+- [x] **诚实失败态（auth_dead）**：续命被服务端 `invalid_grant` 拒（钥匙串令牌失效）时，菜单栏显示「登录已失效 · 去 `/login`」而非误导的「闲置/限流」；用户重登后自动恢复（`docs/ARCHITECTURE.md` §6.4）。
+- [x] 安装 / 卸载脚本：`install.sh` 装 SwiftBar（如缺）、铺组件、写并加载 LaunchAgent、首拉数据、**装稳定卸载脚本到 `~/.claude/`（②）**、**step 6 默认启用完成提醒层、step 6b 幂等接通 statusLine 桥接（均合并进 `settings.json`，非致命、已有别的不覆盖）**；`uninstall.sh` 反向清理（含对称移除我们的 hook + statusLine + 删 alert 脚本）且不碰 CC 凭证与数据、不动用户其它 hook / statusLine。
 - [x] **② 菜单卸载入口**：下拉 `管理 ▸ 卸载 ClaudeGauge…` 子菜单（装了稳定卸载脚本才显示），在 Terminal 里可见地跑卸载；卸载脚本与 clone 解绑、自删干净（`docs/ARCHITECTURE.md` §8.6）。
 - [x] 提醒层（默认开 · 随 install.sh 自动启用，commit `52db7f9`）：CC `Stop`/`Notification(permission_prompt)`/`PermissionRequest` hook 触发「有新发现」彩虹态；左键拉回会话载体 + 熄灭；主 `install.sh` step 6 默认启用，`alert/install-alerts.sh` 为可复用机制 + 独立开关（`bash alert/install-alerts.sh` / `--uninstall`），主 `uninstall.sh` 对称移除。**绝不读对话/代码**（详见 §2.4 / `docs/ARCHITECTURE.md` §8.5）。
 - [x] **⑤ 提醒层面向会话载体**：`session_host()` 走进程祖先链认出会话宿主（终端 App / 桌面端），点击回到正确载体（修复终端会话点彩虹跳错 App 的旧 bug）；只读进程元数据（`docs/ARCHITECTURE.md` §8.5）。
@@ -146,17 +149,22 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 
 旧版自愈靠从 `/tmp` 跑 headless `claude -p ok`（消耗极小额度）。现已换成**直接 OAuth refresh**：token 将在 ≤60s 内过期时，用钥匙串里的 refresh token POST `https://platform.claude.com/v1/oauth/token`，拿回新 token 后**深拷贝整个 blob、只改 `claudeAiOauth` 三个 token 字段写回**，完整保留 `mcpOAuth` 与其余字段。纯鉴权调用、**零额度消耗**；refresh token 会轮换故必须写回；卡 60s 是避免与活跃 CC（提前 5 分钟自刷新）抢轮换。详见 §2.2 与 `docs/ARCHITECTURE.md` §6。
 
+### 最近一次关键变更（续）：auth_dead 诚实失败态 + 桥接默认接通
+
+修一类**反复发生的卡死**：CC 活跃使用时自己轮换 OAuth token、新 token 只留内存没回写钥匙串，钥匙串遂停在「access 过期 + refresh 失效」死态，续命收 `400 invalid_grant` 无法自愈——旧版菜单栏一律显示误导文案「闲置/限流；用一下 Claude Code 即刷新」（用户正在用 CC 也好不了）。两层修复：① **诚实失败态**——刷新器检测 `invalid_grant` 写 `auth_dead`，渲染层据此改显「⚠️ 登录已失效 · 去 `/login`」（覆盖所有用户，含桌面端；`refresher`/`plugin` 改动，失败路径绝不碰 keychain）；② **桥接默认接通**——`install.sh` step 6b 幂等把 statusLine 合并进 `settings.json`（`uninstall.sh` 对称移除），让**终端 CLI** 用户走零 token 通路、对此 bug 免疫。诚实标注：**桌面版 Claude.app 会话不执行 statusLine，桥接救不了桌面端**，桌面端遇此态只能靠 `/login` 提示。详见 `docs/ARCHITECTURE.md` §6.4。
+
 **对外卖点定调**：首屏主打「只读官方用量、绝不读你的对话/代码（多数竞品在翻 `~/.claude/projects` 算用量）」+「免费、开源、零额度消耗」。**不主打"纯本地"**（默认要联网调 Anthropic 用量端点，仅桥接模式纯本地）、**不写"完全零消耗"以外的夸大**。
 
 ---
 
 ## 5. 已知局限
 
-1. **桥接仅对新会话生效**：注册 `statusLine` 后，只有之后新开的 Claude Code 会话才会写 `live.json`；已开会话不受影响。
+1. **桥接仅对新会话生效、且只覆盖终端 CLI**：注册 `statusLine` 后只有之后新开的 CC 会话才写 `live.json`；**桌面版 Claude.app 的会话不执行命令型 `statusLine`，桥接对桌面端用户无效**。`install.sh`（step 6b）现会自动幂等合并 statusLine（不覆盖你已有的）。
 2. **续命依赖 OAuth 端点与凭证格式**：自愈走 `platform.claude.com/v1/oauth/token` + 固定 `client_id`，并按 CC 的钥匙串 JSON 结构写回。若 Anthropic 改了端点 / client_id / 凭证格式，续命会失效——届时降级为"诚实陈旧"变灰，不会报错，用户重新登录 CC 后自动恢复。**已无早期 `claude -p` 的额度成本，续命零消耗。**
 3. **usage 端点非高频设计**：`api/oauth/usage` 不是为高频轮询设计的，官方 `/usage` 页面自身缓存约 4 分钟。我们的自适应节流（够用时 240s）即为避免 429。改间隔时务必保守。
 4. **平台**：仅 macOS（依赖 SwiftBar、`security` 钥匙串、`launchctl`、`defaults`）。
 5. **订阅前提**：需已登录的 Claude Code（提供钥匙串 token 与 refresh token）+ Pro/Max 订阅；系统自带 `python3`。
+6. **令牌失效需手动重登（钥匙串路径无法自动恢复）**：CC 活跃使用时会自己轮换 OAuth token 且未必回写钥匙串，钥匙串可能停在「access 过期 + refresh 失效」死态，续命收 `invalid_grant`、自愈无解。此时菜单栏不再误导，而是变灰提示「⚠️ 登录已失效 · 去 `/login`」（`auth_dead`，见 §2.2 / `docs/ARCHITECTURE.md` §6.4）；用户在 CC 里 `/login` 重登后下一次成功 poll 自动恢复。**终端 CLI** 用户装了桥接（零 token）可规避此路径；**桌面端**用户不走桥接，只能靠该提示重登。
 
 ---
 
@@ -221,6 +229,7 @@ cat ~/.cache/claude-gauge/live.json
 - **深浅色自适应**：切换系统外观（浅 ↔ 深），确认够用态文字颜色随之变化、保持可读。
 - **刘海宽度**：在带刘海的 Mac 上确认标题不会被吞（开 `extra_usage` 时 `+$` 是否被正确省略）。
 - **token 自愈**：跑 `bash ~/.claude/claude-gauge-refresh.sh refresh` 强制续命，确认钥匙串 token 轮换（尾位变）、`mcpOAuth` 等其余字段保留、cache 随即刷新；零额度（不触发任何模型推理）。
+- **登录失效诚实提示（auth_dead）**：模拟令牌彻底失效——往 `~/.cache/claude-gauge/refresh-state.json` 写 `"auth_dead": true` 并让 cache 陈旧（停 LaunchAgent 等 >15min，或手动把 cache 的 `ts` 调早）→ 跑 `bash ~/.swiftbar/claude-gauge.15s.sh`，下拉应显示「⚠️ 登录已失效 / 在 Claude Code 里运行 /login」而非「闲置/限流」；把 `auth_dead` 改回 `false` → 回到「闲置/限流」文案。真实触发：refresh token 被服务端作废时，`bash ~/.claude/claude-gauge-refresh.sh refresh` 续命收 `400 invalid_grant`，刷新器自动把 `auth_dead` 置真（失败路径不碰 keychain）。
 - **① 随 Claude 显隐**：关掉 Claude 桌面端**且**无任何 `claude` 命令行会话在跑 → 等 ≤15-30s（SwiftBar 周期 + linger 120s 过后），菜单栏图标**消失**；重开桌面端或起一个 `claude` 会话 → ≤15s 图标**重现**，数据 ≤30s 恢复新鲜。手动核对：Claude 没在用时跑 `bash ~/.swiftbar/claude-gauge.15s.sh` 应**输出为空**（被 `_active()` 早退）。只查进程/App，不读内容。
 - **① 续 · SwiftBar 开机自启（重启后 gauge 仍随 Claude 显隐）**：`./install.sh`（step 5b）应把 SwiftBar 设为登录项——核对 `osascript -e 'tell application "System Events" to exists login item "SwiftBar"'` 返回 `true`，或 `系统设置▸通用▸登录项` 里有 SwiftBar。**关机/重启/重新登录后 SwiftBar 自动起来**，gauge 照常随 Claude 显隐；否则「随 Claude 显隐」逻辑在插件里、没宿主进程执行就永不出现（**实测断电后踩过，见 `tasks/lessons.md`**）。
 - **② 菜单卸载**：装好后下拉底部应有 `管理 ▸ 卸载 ClaudeGauge…`（前提 `~/.claude/claude-gauge-uninstall.sh` 存在）。点击它应**在 Terminal 里可见地**跑卸载脚本（`terminal=true`），即使原 clone 目录已删也能卸载（脚本已拷到 `~/.claude/`，与 clone 解绑）。
@@ -237,7 +246,7 @@ cat ~/.cache/claude-gauge/live.json
 ./uninstall.sh
 ```
 
-确认：LaunchAgent 卸载、插件与 `~/.claude` 下的刷新/桥接脚本删除、`~/.cache/claude-gauge` 删除、稳定卸载脚本 `~/.claude/claude-gauge-uninstall.sh` 自删（②，`uninstall.sh:72`）；**提醒层对称移除**——`settings.json` 里 command 含 `claude-gauge-alert.py` 的 hook 条目被删、`~/.claude/claude-gauge-alert.py` 删除（见下）；**SwiftBar 宿主清理**——若 ClaudeGauge 是唯一插件则退出 SwiftBar + 移除开机自启登录项 + `brew uninstall --cask swiftbar`（彻底清干净），若你还有别的 SwiftBar 插件则保留给它们用、只移除本插件；**Claude Code 凭证与数据未被触碰、用户其它 hook 原封不动**（`statusLine` 若手动加过需用户自行从 `settings.json` 移除——`uninstall.sh:71` 会提示，本卸载不替你删）。
+确认：LaunchAgent 卸载、插件与 `~/.claude` 下的刷新/桥接脚本删除、`~/.cache/claude-gauge` 删除、稳定卸载脚本 `~/.claude/claude-gauge-uninstall.sh` 自删（②，`uninstall.sh:94`）；**提醒层对称移除**——`settings.json` 里 command 含 `claude-gauge-alert.py` 的 hook 条目被删、`~/.claude/claude-gauge-alert.py` 删除（见下）；**SwiftBar 宿主清理**——若 ClaudeGauge 是唯一插件则退出 SwiftBar + 移除开机自启登录项 + `brew uninstall --cask swiftbar`（彻底清干净），若你还有别的 SwiftBar 插件则保留给它们用、只移除本插件；**Claude Code 凭证与数据未被触碰、用户其它 hook 原封不动**（**statusLine 桥接也对称自动移除**：仅当 `settings.json` 的 statusLine 指向本桥接 [command 含 `claude-gauge-statusline.py`] 时才删该键，你自定义的 statusLine 原封不动）。
 
 > **提醒层卸载**：主 `uninstall.sh` 用一段**自包含、不依赖 repo 仍在**的内联 python 块（`uninstall.sh` 约 :9–:46）对称移除——只剥掉 `Stop`/`Notification`/`PermissionRequest` 里 command 含 `claude-gauge-alert.py` 的 hook 条目（先备份、回解析校验、原子写、绝不动用户其它 hook），再 `rm -f ~/.claude/claude-gauge-alert.py`（非致命：settings.json 异常时只提示不阻断）；`attention.json`/`ack.json` 随 `~/.cache/claude-gauge` 一并清理。也可单独 `bash alert/install-alerts.sh --uninstall` 达成同样效果。
 

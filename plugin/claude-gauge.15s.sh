@@ -16,6 +16,7 @@ CACHE=os.path.expanduser("~/.cache/claude-gauge/cache.json")
 LIVE =os.path.expanduser("~/.cache/claude-gauge/live.json")
 ATTN =os.path.expanduser("~/.cache/claude-gauge/attention.json")   # 完成提醒层：未读事件（默认开；旧装/异常时可能没有→分支短路）
 ACK  =os.path.expanduser("~/.cache/claude-gauge/ack.json")          # 完成提醒层：已读标记
+STATE=os.path.expanduser("~/.cache/claude-gauge/refresh-state.json")# 数据层状态：含 auth_dead（续命被服务端 invalid_grant 拒 → 钥匙串令牌失效，需 /login）
 os.makedirs(os.path.dirname(CACHE), exist_ok=True)
 STALE_SEC=900
 CLAUDE_BUNDLE="com.anthropic.claudefordesktop"                      # 点击拉起 / 自动熄灭判定的目标 App
@@ -184,8 +185,12 @@ def render(d,ts):
     print(f"Claude Code 用量 | color={NORMAL}")                                     # 标题（gauge 图标按用户要求移除，下拉头不再重复）
     if stale:
         print("---")
-        print(f"⚠️ 数据已 {int(age//60)} 分钟未更新 | color={COL_WARN}")
-        print(f"闲置/限流；用一下 Claude Code 即刷新 | size=11 color={MUTE}")
+        if (_loadj(STATE) or {}).get("auth_dead"):                  # 续命被服务端拒：钥匙串令牌失效，唯有重新登录能救（别误导成"用一下就刷新"）
+            print(f"⚠️ 登录已失效 | color={COL_WARN}")
+            print(f"在 Claude Code 里运行 /login 重新登录 | size=11 color={MUTE}")
+        else:
+            print(f"⚠️ 数据已 {int(age//60)} 分钟未更新 | color={COL_WARN}")
+            print(f"闲置/限流；用一下 Claude Code 即刷新 | size=11 color={MUTE}")
     print("---")
     if fh is not None: section("当前 5 小时 · session","clock",_used(fh),_cd5((d.get('five_hour') or {}).get('resets_at')),scol(fh))
     if wk is not None: section("本周 · 7 天","calendar",_used(wk),_cd7((d.get('seven_day') or {}).get('resets_at')),scol(wk))
