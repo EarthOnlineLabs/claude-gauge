@@ -1,5 +1,6 @@
 .vercel
 node_modules
 dist
+.vite
 # 由 scripts/strip-remote-fonts.mjs 在 dev/build 前自动生成（剥离外部字体 @import 的 DS 样式）
 src/styles/designonline-ui.generated.css

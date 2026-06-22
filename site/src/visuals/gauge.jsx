@@ -1,5 +1,4 @@
 import React from "react";
-import { Meter } from "designonline-ui";
 
 /* ============================================================================
    ClaudeGauge · 产品自绘视觉（非 DesignOnline 组件）
@@ -10,6 +9,8 @@ import { Meter } from "designonline-ui";
 
 const cx = (...p) => p.filter(Boolean).join(" ");
 const tt = (lang, en, zh) => (lang === "en" ? en : zh);
+// 文字方块进度条（与真工具菜单 1:1：原生菜单画不了平滑条，demo 也用方块保持一致）
+const blockBar = (pct) => { const f = Math.round(Math.max(0, Math.min(100, pct)) / 10); return "█".repeat(f) + "░".repeat(10 - f); };
 
 /* 表盘标记 — 半圆刻度 + 指针。rainbow=光谱(身份)；state=ok/warn/crit。 */
 export function GaugeMark({ size = 20, rainbow = false, state = "ok", className }) {
@@ -99,26 +100,34 @@ function DDRow({ lang, kind, pct, left, reset, state }) {
         <span>{kind === "week" ? tt(lang, "This week · 7-day", "本周 · 7 天") : tt(lang, "Current 5-hour · session", "当前 5 小时 · 会话")}</span>
       </div>
       <div className={cx("cg-dd-used", state !== "ok" && `cg-dd-used--${state}`)}>
-        <b>{pct}%</b><span className="cg-dd-muted"> {tt(lang, "used", "已用")} · {left}% {tt(lang, "left", "还剩")}</span>
+        {pct}% {tt(lang, "used", "已用")} · {left}% {tt(lang, "left", "还剩")}
       </div>
-      <Meter pct={pct} state={state} />
+      <div className={cx("cg-dd-bar", state !== "ok" && `cg-dd-bar--${state}`)}>{blockBar(pct)}</div>
       <div className="cg-dd-reset">{tt(lang, "resets in " + reset, reset + " 后重置")}</div>
     </div>
   );
 }
 
-/* 下拉明细卡 */
-export function UsageDropdown({ lang = "zh", rows, foot = true }) {
+/* 刷新 / 齿轮小图标（下拉按钮用，与真工具的 sfimage 同形） */
+function RefreshGlyph() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-3-6.7M21 3v6h-6" /></svg>;
+}
+function GearGlyph() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="3.1" /><path d="M12 2.6v2.4M12 19v2.4M4.5 4.5l1.7 1.7M17.8 17.8l1.7 1.7M2.6 12h2.4M19 12h2.4M4.5 19.5l1.7-1.7M17.8 6.2l1.7-1.7" /></svg>;
+}
+
+/* 下拉明细卡 — 1:1 镜像真工具（菜单）：黑数据 + 文字方块进度 + 灰次要 + 两个真按钮(› 标记) */
+export function UsageDropdown({ lang = "zh", rows }) {
   return (
     <div className="cg-dropdown">
       <div className="cg-dd-head"><GaugeMark size={16} rainbow /> <span>{tt(lang, "Claude Code usage", "Claude Code 用量")}</span></div>
       {rows.map((r, i) => <DDRow key={i} lang={lang} {...r} />)}
-      {foot && (
-        <div className="cg-dd-foot">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-3-6.7M21 3v6h-6" /></svg>
-          <span>{tt(lang, "Updated 21:04 (just now) · refresh now", "更新于 21:04（刚刚）· 立即刷新")}</span>
-        </div>
-      )}
+      <div className="cg-dd-foot2">
+        <div className="cg-dd-model">{tt(lang, "By model (week)", "按模型（本周）")}　Sonnet 0%</div>
+        <div className="cg-dd-updated">{tt(lang, "Updated 21:04 (just now)", "更新于 21:04（刚刚）")}</div>
+        <button type="button" className="cg-dd-btn"><RefreshGlyph /> <span>{tt(lang, "Refresh now", "立即刷新")}</span><span className="cg-dd-chev">›</span></button>
+        <button type="button" className="cg-dd-btn"><GearGlyph /> <span>{tt(lang, "Manage", "管理")}</span><span className="cg-dd-chev">›</span></button>
+      </div>
     </div>
   );
 }
