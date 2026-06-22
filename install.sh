@@ -7,12 +7,14 @@ warn(){ printf "\033[1;33m!\033[0m %s\n" "$1"; }
 
 [ "$(uname)" = "Darwin" ] || { echo "ClaudeGauge 仅支持 macOS"; exit 1; }
 
-# 定位源码：本地 clone 直接用；curl|bash 自动 clone 到临时目录
+# 定位源码：本地 clone 直接用；curl|bash 自动下载到临时目录（不依赖 git）
 REPO="$(cd "$(dirname "$0")" && pwd)"
 if [ ! -f "$REPO/plugin/claude-gauge.15s.sh" ]; then
   say "通过 curl 运行，正在下载最新源码…"
   REPO="$(mktemp -d)/claude-gauge"
-  git clone --depth 1 https://github.com/EarthOnlineLabs/claude-gauge.git "$REPO"
+  mkdir -p "$REPO"
+  curl -fsSL https://github.com/EarthOnlineLabs/claude-gauge/archive/refs/heads/main.tar.gz \
+    | tar xz --strip-components=1 -C "$REPO"
   _CLEANUP_REPO="$REPO"
   trap 'rm -rf "${_CLEANUP_REPO:-}"' EXIT
   ok "源码就绪"
@@ -22,7 +24,7 @@ fi
 if [ ! -d "/Applications/SwiftBar.app" ]; then
   say "未检测到 SwiftBar，准备用 Homebrew 安装"
   command -v brew >/dev/null || { echo "需要 Homebrew：https://brew.sh"; exit 1; }
-  read -r -p "  安装 SwiftBar？[Y/n] " a; [ "${a:-Y}" = "n" ] && { echo "已取消"; exit 1; }
+  read -r -p "  安装 SwiftBar？[Y/n] " a < /dev/tty; [ "${a:-Y}" = "n" ] && { echo "已取消"; exit 1; }
   brew install --cask swiftbar
 fi
 ok "SwiftBar 就绪"
