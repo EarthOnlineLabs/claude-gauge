@@ -92,8 +92,8 @@ code,.cg-code-i{font-family:var(--font-mono);font-size:.86em;background:var(--co
 .cg-pill--lit{background:var(--color-bg-hover)}
 .cg-stale{color:var(--color-text-subtle);filter:grayscale(1) opacity(.7)}
 .cg-pill-anchor{position:relative;display:inline-flex;align-items:center}
-.cg-pop{position:absolute;top:calc(100% + 9px);left:0;width:300px;max-width:78vw;z-index:6}
-.cg-pop::before{content:"";position:absolute;top:-6px;left:28px;width:13px;height:13px;
+.cg-pop{position:absolute;top:calc(100% + 9px);right:-8px;width:300px;max-width:78vw;z-index:6}
+.cg-pop::before{content:"";position:absolute;top:-6px;right:28px;width:13px;height:13px;
   background:var(--color-bg-surface);border-left:var(--border-hair) solid var(--color-border-default);
   border-top:var(--border-hair) solid var(--color-border-default);transform:rotate(45deg)}
 
