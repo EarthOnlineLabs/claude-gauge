@@ -64,6 +64,9 @@ def _is_dark():
 # 浅色取 DS token（text-default=ink-900 / text-subtle=ink-500）；深色保留菜单栏自适应近白/灰。
 NORMAL = "#ededef" if _is_dark() else "#1B1B1B"
 MUTE   = "#9a9aa0" if _is_dark() else "#9CA0A2"
+# 数据行挂"点击=刷新"动作 → 启用态=墨色清晰(会 hover)，留意橙/告急红在下拉里也恒亮、不被压淡。
+# 点任意数据行 = 强制拉最新（与"立即刷新"同效，hover 名正言顺）。
+ACT = f"shell={os.path.expanduser('~')}/.claude/claude-gauge-refresh.sh param0=force terminal=false refresh=true"
 MAXW,CD_CAP=11,"9h+"
 
 def remain(b): return None if not b or b.get("utilization") is None else 100-float(b["utilization"])
@@ -167,9 +170,9 @@ def title_line(fh,wk,d,stale=False,armed=False):
     return f"{text} | color={col} image={ICON_CRIT if col==COL_CRIT else ICON_WARN} {ICON_SZ}"
 
 def section(label, icon, u, cd_str, col):
-    print(f'{label} | sfimage={icon} size=12 font="PingFang SC"')                    # 标签：苹方；不强制色→原生菜单清晰色（vibrancy 自适应）
-    print(f"{u}% 已用　·　{100-u}% 还剩 | size=14 font=Menlo{col}")   # 数字：等宽(DS --font-mono tabular)，措辞数字在前
-    print(f"{bar(u)} | font=Menlo size=15{col}")                     # 进度条：放大(主信息)
+    print(f'{label} | sfimage={icon} size=12 font="PingFang SC" {ACT}')              # 标签：苹方常规；可点(刷新)→墨色+hover
+    print(f"{u}% 已用　·　{100-u}% 还剩 | size=14 font=Menlo{col} {ACT}")             # 数字：等宽常规；可点→墨色(OK)/橙红(警示)恒亮
+    print(f"{bar(u)} | font=Menlo size=15{col} {ACT}")               # 进度条：可点→显色不发灰
     if cd_str: print(f"{cd_str} 后重置 | size=11 color={MUTE} font=Menlo")  # 倒计时：等宽小灰(DS --font-mono)
 
 def render(d,ts):
@@ -182,7 +185,7 @@ def render(d,ts):
         if _ts(att.get("ts")) > _ts((_loadj(ACK) or {}).get("ts")): _awrite_ack(time.time())
     print(title_line(fh,wk,d,stale,_armed() if att else False))
     print("---")
-    print(f'Claude Code 用量 | size=15 font="Songti SC" image={ICON_RAINBOW} {ICON_SZ}')  # 标题宋体 + 彩虹表盘；不强制色→原生菜单清晰色（vibrancy 自适应）
+    print(f'Claude Code 用量 | size=15 font="Songti SC" {ACT} image={ICON_RAINBOW} {ICON_SZ}')  # 标题宋体 + 彩虹表盘；可点(刷新)→墨色
     if stale:
         print("---")
         if (_loadj(STATE) or {}).get("auth_dead"):                  # 续命被服务端拒：钥匙串令牌失效，唯有重新登录能救（别误导成"用一下就刷新"）
@@ -201,10 +204,10 @@ def render(d,ts):
     print("---")
     upd=datetime.datetime.fromtimestamp(ts).strftime("%H:%M")
     print((f"更新于 {upd}（{int(age//60)}分钟前）" if age>=60 else f"更新于 {upd}（刚刚）")+f" | size=11 color={MUTE} font=Menlo")
-    home=os.path.expanduser("~"); print(f"立即刷新（强制拉最新）| shell={home}/.claude/claude-gauge-refresh.sh | param0=force | terminal=false | refresh=true | sfimage=arrow.clockwise")
+    home=os.path.expanduser("~"); print(f"立即刷新（强制拉最新） ›| shell={home}/.claude/claude-gauge-refresh.sh | param0=force | terminal=false | refresh=true | sfimage=arrow.clockwise")
     un=f"{home}/.claude/claude-gauge-uninstall.sh"                    # ② 菜单卸载入口（装了稳定卸载脚本才显示，子菜单收纳、不污染主下拉）
     if os.path.exists(un):
-        print("---"); print(f"管理 | size=11 color={MUTE}")
+        print("---"); print("管理 | sfimage=gearshape")   # 真按钮：墨色 + 齿轮图标 + 子菜单 ›（与"立即刷新"同级）
         print(f"--卸载 ClaudeGauge… | shell=/bin/bash | param0={un} | terminal=true | sfimage=trash")
 
 def load(p):
