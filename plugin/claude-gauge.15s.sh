@@ -208,7 +208,7 @@ def render(d,ts):
     un=f"{home}/.claude/claude-gauge-uninstall.sh"                    # ② 菜单卸载入口（装了稳定卸载脚本才显示，子菜单收纳、不污染主下拉）
     if os.path.exists(un):
         print("---"); print("管理 | sfimage=gearshape")   # 真按钮：墨色 + 齿轮图标 + 子菜单 ›（与"立即刷新"同级）
-        print(f"--卸载 ClaudeGauge… | shell=/bin/bash | param0={un} | terminal=true | sfimage=trash")
+        print(f"--卸载 ClaudeGauge… | shell={un} | terminal=true | sfimage=trash")
 
 def load(p):
     try:
