@@ -100,7 +100,7 @@ code,.cg-code-i{font-family:var(--font-mono);font-size:.86em;background:var(--co
 /* ---- 下拉明细 ----------------------------------------------------------- */
 .cg-dropdown{width:100%;max-width:100%;background:var(--color-bg-surface);
   border:var(--border-hair) solid var(--color-border-default);border-radius:var(--radius-card);
-  box-shadow:var(--shadow-soft);padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-4)}
+  box-shadow:var(--shadow-soft);padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-4);text-align:left}
 .cg-dd-head{display:flex;align-items:center;gap:var(--space-2);
   font-family:var(--font-serif);font-weight:var(--fw-semibold);font-size:var(--fs-300);color:var(--color-text-default);
   padding-bottom:var(--space-3);border-bottom:var(--border-hair) solid var(--color-border-subtle)}

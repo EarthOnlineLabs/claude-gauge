@@ -23,12 +23,8 @@ export function HeroLive() {
       label: t("Done", "完成提醒"), pill: { text: "31%", state: "ok", rainbow: true, pulse: true },
       rows: [{ kind: "session", pct: 31, left: 69, reset: "3h05m", state: "ok" }, { kind: "week", pct: 50, left: 50, reset: "4d", state: "ok" }],
     },
-    stale: {
-      label: t("Stale", "数据过期"), pill: { text: "49%", state: "ok", stale: true },
-      rows: [{ kind: "session", pct: 49, left: 51, reset: "2h41m", state: "ok" }, { kind: "week", pct: 63, left: 37, reset: "4d", state: "ok" }],
-    },
   };
-  const ORDER = ["ok", "warn", "crit", "done", "stale"];
+  const ORDER = ["ok", "warn", "crit", "done"];
   const MENUS = [t("File", "文件"), t("Edit", "编辑"), t("View", "显示"), t("Window", "窗口"), t("Help", "帮助")];
   const [stKey, setStKey] = React.useState("warn");
   const [open, setOpen] = React.useState(true);
