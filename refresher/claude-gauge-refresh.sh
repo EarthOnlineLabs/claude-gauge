@@ -12,6 +12,7 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 import json, subprocess, time, os, tempfile, urllib.request, urllib.error
 CACHE=os.path.expanduser("~/.cache/claude-gauge/cache.json")
 STATE=os.path.expanduser("~/.cache/claude-gauge/refresh-state.json")
+ORG_CACHE=os.path.expanduser("~/.cache/claude-gauge/org.json")
 CLIENT_ID="9d1c250a-e61b-44d9-88ed-5944d1962f5e"
 TOKEN_URL="https://platform.claude.com/v1/oauth/token"
 UA="claude-cli/1.0.119 (external, cli)"
@@ -89,9 +90,23 @@ lm=st.get("last_max_util"); chg=st.get("changed",False)
 iv = 45 if (lm is not None and lm>=90) else (60 if (lm is not None and lm>=75) else (60 if chg else 240))
 if os.environ.get("CQ_FORCE")!="1" and os.environ.get("CQ_REFRESH")!="1" and now-st.get("last_poll_ts",0) < iv: raise SystemExit(0)
 if not tk or (tk.get("expiresAt") and tk["expiresAt"]/1000 < now): raise SystemExit(0)
+# ②b 解析组织 UUID（多组织用户的用量 API 需要显式指定，否则可能返回错误组织的数据）
+def get_org_uuid(access_token):
+    cached=load(ORG_CACHE,{})
+    if cached.get("uuid") and now - cached.get("ts",0) < 86400: return cached["uuid"]
+    try:
+        req=urllib.request.Request("https://api.anthropic.com/api/claude_cli/bootstrap",headers={"Authorization":f"Bearer {access_token}","anthropic-beta":"oauth-2025-04-20"})
+        bs=json.load(urllib.request.urlopen(req,timeout=10))
+        uuid=(bs.get("oauth_account") or {}).get("organization_uuid")
+        if uuid: awrite(ORG_CACHE,{"uuid":uuid,"ts":now})
+        return uuid
+    except Exception: return cached.get("uuid")
+org_uuid=get_org_uuid(tk["accessToken"])
 # ③ poll
 try:
-    req=urllib.request.Request("https://api.anthropic.com/api/oauth/usage",headers={"Authorization":f"Bearer {tk['accessToken']}","anthropic-beta":"oauth-2025-04-20"})
+    hdrs={"Authorization":f"Bearer {tk['accessToken']}","anthropic-beta":"oauth-2025-04-20"}
+    if org_uuid: hdrs["x-organization-uuid"]=org_uuid
+    req=urllib.request.Request("https://api.anthropic.com/api/oauth/usage",headers=hdrs)
     j=json.load(urllib.request.urlopen(req,timeout=10))
 except Exception: raise SystemExit(0)
 # ④ 原子写 cache（优先 limits 数组——官方页面数据源；fallback 旧字段兼容）
