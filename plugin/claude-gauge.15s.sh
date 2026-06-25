@@ -11,7 +11,7 @@
 # <swiftbar.hideSwiftBar>true</swiftbar.hideSwiftBar>
 export PATH="/usr/bin:/bin:/usr/sbin:/sbin"
 /usr/bin/python3 <<'PY'
-import os, json, urllib.request, datetime, time, sys, subprocess, tempfile
+import os, json, urllib.request, urllib.error, datetime, time, sys, subprocess, tempfile
 CACHE=os.path.expanduser("~/.cache/claude-gauge/cache.json")
 LIVE =os.path.expanduser("~/.cache/claude-gauge/live.json")
 ATTN =os.path.expanduser("~/.cache/claude-gauge/attention.json")   # 完成提醒层：未读事件（默认开；旧装/异常时可能没有→分支短路）
@@ -234,10 +234,18 @@ if (best is None) or (time.time()-best["ts"]>150):   # 兜底：后台失效才�
             org_f=os.path.expanduser("~/.cache/claude-gauge/org.json")
             try: org_uuid=json.load(open(org_f)).get("uuid")
             except Exception: pass
-            hdrs={"Authorization":f"Bearer {tk['accessToken']}","anthropic-beta":"oauth-2025-04-20"}
+            hdrs={"Authorization":f"Bearer {tk['accessToken']}","anthropic-beta":"oauth-2025-04-20","User-Agent":"claude-cli/1.0.119 (external, cli)"}
             if org_uuid: hdrs["x-organization-uuid"]=org_uuid
-            req=urllib.request.Request("https://api.anthropic.com/api/oauth/usage",headers=hdrs)
-            with urllib.request.urlopen(req,timeout=8) as r: j=json.load(r)
+            j=None
+            for _att in range(2):
+                try:
+                    req=urllib.request.Request("https://api.anthropic.com/api/oauth/usage",headers=hdrs)
+                    with urllib.request.urlopen(req,timeout=8) as r: j=json.load(r); break
+                except urllib.error.HTTPError as e:
+                    if e.code==429 and _att==0: time.sleep(10); continue
+                    break
+                except Exception: break
+            if j is None: raise Exception("api failed")
             lm={e["kind"]:e for e in (j.get("limits") or []) if "kind" in e}
             dd={}
             for lk,dk in [("session","five_hour"),("weekly_all","seven_day")]:

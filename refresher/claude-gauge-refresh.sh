@@ -85,9 +85,12 @@ if blob and tk and tk.get("expiresAt") and (os.environ.get("CQ_REFRESH")=="1" or
 # 续命被服务端拒（RT 失效）→ 立刻持久化诚实失败态供菜单栏提示 /login（早于节流/退出；恢复时由成功 poll 收尾清零）
 if auth_dead != bool(st.get("auth_dead")):
     st["auth_dead"]=auth_dead; st["auth_dead_ts"]=now; awrite(STATE,st)
-# ② 节流：到点才 poll
+# ② 节流：到点才 poll（连续 429 时自动退让，防止越限流越密集的恶性循环）
 lm=st.get("last_max_util"); chg=st.get("changed",False)
 iv = 45 if (lm is not None and lm>=90) else (60 if (lm is not None and lm>=75) else (60 if chg else 240))
+fs=st.get("poll_fail_streak",0)
+if fs>=3: iv=max(iv,600)
+elif fs>=1: iv=max(iv,300)
 if os.environ.get("CQ_FORCE")!="1" and os.environ.get("CQ_REFRESH")!="1" and now-st.get("last_poll_ts",0) < iv: raise SystemExit(0)
 if not tk or (tk.get("expiresAt") and tk["expiresAt"]/1000 < now): raise SystemExit(0)
 # ②b 解析组织 UUID（多组织用户的用量 API 需要显式指定，否则可能返回错误组织的数据）
@@ -102,13 +105,21 @@ def get_org_uuid(access_token):
         return uuid
     except Exception: return cached.get("uuid")
 org_uuid=get_org_uuid(tk["accessToken"])
-# ③ poll
-try:
-    hdrs={"Authorization":f"Bearer {tk['accessToken']}","anthropic-beta":"oauth-2025-04-20"}
-    if org_uuid: hdrs["x-organization-uuid"]=org_uuid
-    req=urllib.request.Request("https://api.anthropic.com/api/oauth/usage",headers=hdrs)
-    j=json.load(urllib.request.urlopen(req,timeout=10))
-except Exception: raise SystemExit(0)
+# ③ poll（429 限流时重试一次，避免缓存永久卡死——这是测试用户数据不更新的根因）
+j=None
+hdrs={"Authorization":f"Bearer {tk['accessToken']}","anthropic-beta":"oauth-2025-04-20","User-Agent":UA}
+if org_uuid: hdrs["x-organization-uuid"]=org_uuid
+for _attempt in range(2):
+    try:
+        req=urllib.request.Request("https://api.anthropic.com/api/oauth/usage",headers=hdrs)
+        j=json.load(urllib.request.urlopen(req,timeout=10)); break
+    except urllib.error.HTTPError as e:
+        if e.code==429 and _attempt==0: time.sleep(15); continue
+        break
+    except Exception: break
+if j is None:
+    fc=st.get("poll_fail_streak",0)+1; st["poll_fail_streak"]=fc; st["last_poll_ts"]=now; awrite(STATE,st)
+    raise SystemExit(0)
 # ④ 原子写 cache（优先 limits 数组——官方页面数据源；fallback 旧字段兼容）
 data={}
 lim={e["kind"]:e for e in (j.get("limits") or []) if "kind" in e}
@@ -138,6 +149,6 @@ awrite(CACHE,{"ts":now,"data":data})
 u5=(data.get("five_hour") or {}).get("utilization"); u7=(data.get("seven_day") or {}).get("utilization")
 p5,p7=st.get("last_5h"),st.get("last_7d")
 chg_now = (u5 is not None and p5 is not None and abs(u5-p5)>=1) or (u7 is not None and p7 is not None and abs(u7-p7)>=1)
-st.update({"last_poll_ts":now,"last_max_util":max([x for x in (u5,u7) if x is not None],default=None),"last_5h":u5,"last_7d":u7,"changed":chg_now,"auth_dead":False})
+st.update({"last_poll_ts":now,"last_max_util":max([x for x in (u5,u7) if x is not None],default=None),"last_5h":u5,"last_7d":u7,"changed":chg_now,"auth_dead":False,"poll_fail_streak":0})
 awrite(STATE,st)
 PY

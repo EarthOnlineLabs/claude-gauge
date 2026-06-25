@@ -149,6 +149,10 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 
 旧版自愈靠从 `/tmp` 跑 headless `claude -p ok`（消耗极小额度）。现已换成**直接 OAuth refresh**：token 将在 ≤60s 内过期时，用钥匙串里的 refresh token POST `https://platform.claude.com/v1/oauth/token`，拿回新 token 后**深拷贝整个 blob、只改 `claudeAiOauth` 三个 token 字段写回**，完整保留 `mcpOAuth` 与其余字段。纯鉴权调用、**零额度消耗**；refresh token 会轮换故必须写回；卡 60s 是避免与活跃 CC（提前 5 分钟自刷新）抢轮换。详见 §2.2 与 `docs/ARCHITECTURE.md` §6。
 
+### 最近一次关键变更：429 限流重试 + 失败退让（修测试用户数据不更新）
+
+**根因**：刷新器 poll 阶段 `except Exception: raise SystemExit(0)` 把所有 API 错误（含 429 限流）无声吞掉，导致缓存永不更新。外部测试用户安装时缓存 3%，之后 API 持续被 429，缓存卡在 3% 而实际用量已涨到 89%。**验证**：通过浏览器拦截对比，`api.anthropic.com/api/oauth/usage` 返回的数据与官方 `claude.ai` Usage 页面一致——端点本身无误，问题纯在客户端错误处理。**修复**：① 429 时 sleep 15s 重试一次；② 失败递增 `poll_fail_streak` 写入 state，连续失败自动拉长节流间隔（1 次→300s、3 次→600s）；③ 成功 poll 清零 streak；④ 加 User-Agent header（与 CC CLI 一致）。渲染层兜底同步加了 429 重试。
+
 ### 最近一次关键变更（续）：auth_dead 诚实失败态 + 桥接默认接通
 
 修一类**反复发生的卡死**：CC 活跃使用时自己轮换 OAuth token、新 token 只留内存没回写钥匙串，钥匙串遂停在「access 过期 + refresh 失效」死态，续命收 `400 invalid_grant` 无法自愈——旧版菜单栏一律显示误导文案「闲置/限流；用一下 Claude Code 即刷新」（用户正在用 CC 也好不了）。两层修复：① **诚实失败态**——刷新器检测 `invalid_grant` 写 `auth_dead`，渲染层据此改显「⚠️ 登录已失效 · 去 `/login`」（覆盖所有用户，含桌面端；`refresher`/`plugin` 改动，失败路径绝不碰 keychain）；② **桥接默认接通**——`install.sh` step 6b 幂等把 statusLine 合并进 `settings.json`（`uninstall.sh` 对称移除），让**终端 CLI** 用户走零 token 通路、对此 bug 免疫。诚实标注：**桌面版 Claude.app 会话不执行 statusLine，桥接救不了桌面端**，桌面端遇此态只能靠 `/login` 提示。详见 `docs/ARCHITECTURE.md` §6.4。
@@ -161,7 +165,7 @@ ClaudeGauge 是一个 **macOS 菜单栏小工具**，实时、状态感知地显
 
 1. **桥接仅对新会话生效、且只覆盖终端 CLI**：注册 `statusLine` 后只有之后新开的 CC 会话才写 `live.json`；**桌面版 Claude.app 的会话不执行命令型 `statusLine`，桥接对桌面端用户无效**。`install.sh`（step 6b）现会自动幂等合并 statusLine（不覆盖你已有的）。
 2. **续命依赖 OAuth 端点与凭证格式**：自愈走 `platform.claude.com/v1/oauth/token` + 固定 `client_id`，并按 CC 的钥匙串 JSON 结构写回。若 Anthropic 改了端点 / client_id / 凭证格式，续命会失效——届时降级为"诚实陈旧"变灰，不会报错，用户重新登录 CC 后自动恢复。**已无早期 `claude -p` 的额度成本，续命零消耗。**
-3. **usage 端点非高频设计**：`api/oauth/usage` 不是为高频轮询设计的，官方 `/usage` 页面自身缓存约 4 分钟。我们的自适应节流（够用时 240s）即为避免 429。改间隔时务必保守。
+3. **usage 端点非高频设计**：`api/oauth/usage` 不是为高频轮询设计的，429 限流窗口约 5 分钟。我们的自适应节流（够用时 240s）即为避免 429。改间隔时务必保守。**刷新器已有 429 重试（15s 后）+ 连续失败自动退让（1 次→300s、3 次→600s）+ `poll_fail_streak` 追踪**，避免缓存因限流而永久卡死。
 4. **平台**：仅 macOS（依赖 SwiftBar、`security` 钥匙串、`launchctl`、`defaults`）。
 5. **订阅前提**：需已登录的 Claude Code（提供钥匙串 token 与 refresh token）+ Pro/Max 订阅；系统自带 `python3`。
 6. **令牌失效需手动重登（钥匙串路径无法自动恢复）**：CC 活跃使用时会自己轮换 OAuth token 且未必回写钥匙串，钥匙串可能停在「access 过期 + refresh 失效」死态，续命收 `invalid_grant`、自愈无解。此时菜单栏不再误导，而是变灰提示「⚠️ 登录已失效 · 去 `/login`」（`auth_dead`，见 §2.2 / `docs/ARCHITECTURE.md` §6.4）；用户在 CC 里 `/login` 重登后下一次成功 poll 自动恢复。**终端 CLI** 用户装了桥接（零 token）可规避此路径；**桌面端**用户不走桥接，只能靠该提示重登。
