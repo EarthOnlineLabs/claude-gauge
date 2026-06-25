@@ -44,13 +44,21 @@ A usage gauge has to read your account, so *how* it does that matters more than 
 
 ## Install
 
+**Option A — download the installer** (no terminal needed):
+
+Download [ClaudeGauge.pkg](https://github.com/EarthOnlineLabs/claude-gauge/releases/latest/download/ClaudeGauge.pkg), double-click, done.
+
+**Option B — terminal:**
+
 ```bash
 git clone https://github.com/EarthOnlineLabs/claude-gauge.git
 cd claude-gauge
 ./install.sh
 ```
 
-The percentage appears in the top-right of your menu bar within a few seconds. To remove it later: `./uninstall.sh` — it cleans up completely and never touches your credentials.
+The percentage appears in the top-right of your menu bar within a few seconds.
+
+**Uninstall** — run `~/.claude/claude-gauge-uninstall.sh`. It cleans up completely and never touches your credentials.
 
 > Requires macOS, a Claude **Pro or Max** subscription, and a logged-in [Claude Code](https://claude.com/claude-code). The menu-bar host [SwiftBar](https://github.com/swiftbar/SwiftBar) is installed for you if it's missing.
 

@@ -8,6 +8,9 @@ site/.vercel/
 /CLAUDE.md
 /tasks/
 
+# Build output
+/dist/
+
 # Local tooling / caches (not for public repo)
 /.claude/
 /.firecrawl/

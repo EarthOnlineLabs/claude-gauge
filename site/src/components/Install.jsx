@@ -1,11 +1,15 @@
 import React from "react";
-import { PromptBlock, Tag } from "designonline-ui";
+import { Button, PromptBlock, Tag } from "designonline-ui";
 import { useT } from "../lang.jsx";
 import { SecHead } from "./SecHead.jsx";
 
-// 复制用的干净纯文本（与下面带高亮的展示文本不同）。
-const COPY_CMD =
-  "git clone https://github.com/EarthOnlineLabs/claude-gauge.git\ncd claude-gauge && ./install.sh\n\n./uninstall.sh";
+const INSTALL_CMD =
+  "git clone https://github.com/EarthOnlineLabs/claude-gauge.git\ncd claude-gauge && ./install.sh";
+
+const UNINSTALL_CMD = "~/.claude/claude-gauge-uninstall.sh";
+
+const PKG_URL =
+  "https://github.com/EarthOnlineLabs/claude-gauge/releases/latest/download/ClaudeGauge.pkg";
 
 export function Install() {
   const { t } = useT();
@@ -19,17 +23,32 @@ export function Install() {
       <div className="cg-shell">
         <SecHead
           eyebrow={t("Get it running", "让它跑起来")}
-          title={t("Two commands and you're done", "两条命令就搞定")}
-          lede={t("Clone the repo and run the installer. It handles SwiftBar, the background refresher, and the first data pull.", "克隆仓库，运行安装脚本。SwiftBar、后台刷新器和首次拉取数据，它全包了。")}
+          title={t("Pick your way in", "选一种装法")}
+          lede={t(
+            "Download the installer and double-click, or clone the repo and run the script. Both do the same thing.",
+            "下载安装包双击安装，或克隆仓库跑脚本。两种方式效果一样。"
+          )}
         />
         <div className="cg-install">
-          <PromptBlock className="cg-code" code={COPY_CMD} copyLabel={t("Copy", "复制")} copiedLabel={t("Copied", "已复制")}>
-            <span className="cg-c-cmt"># {t("clone and install — macOS only", "克隆并安装 —— 仅限 macOS")}</span><br />
+          {/* --- .pkg download --- */}
+          <a className="cg-pkg-btn" href={PKG_URL} download>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M10 3v10m0 0l-3.5-3.5M10 13l3.5-3.5M4 15.5h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="cg-pkg-btn__label">
+              {t("Download installer", "下载安装包")}
+              <small>.pkg</small>
+            </span>
+          </a>
+
+          <p className="cg-or">{t("or, in Terminal", "或者用终端")}</p>
+
+          {/* --- terminal install --- */}
+          <PromptBlock className="cg-code" code={INSTALL_CMD} copyLabel={t("Copy", "复制")} copiedLabel={t("Copied", "已复制")}>
             <span className="cg-c-cmd">git clone</span> https://github.com/EarthOnlineLabs/claude-gauge.git<br />
-            <span className="cg-c-cmd">cd</span> claude-gauge && ./install.sh<br /><br />
-            <span className="cg-c-cmt"># {t("remove anytime — credentials stay untouched", "随时卸载 —— 绝不动你的凭证")}</span><br />
-            <span className="cg-c-cmd">./uninstall.sh</span>
+            <span className="cg-c-cmd">cd</span> claude-gauge && ./install.sh
           </PromptBlock>
+
           <div className="cg-install__side">
             <div className="cg-stepchips">
               {STEPS.map((s, i) => <Tag key={i} className="cg-stepchip"><b>{i + 1}.</b> {s}</Tag>)}
@@ -39,6 +58,14 @@ export function Install() {
               {t(". Optional: point Claude Code's ", "。可选：把 Claude Code 的 ")}<code className="cg-code-i">statusLine</code>
               {t(" at the bridge for zero-cost instant updates while you work. Removing it later leaves your Claude Code credentials and data completely untouched.", " 指向桥接脚本，干活时零成本即时刷新。日后卸载，绝不动你的 Claude Code 凭证和数据。")}
             </p>
+          </div>
+
+          {/* --- uninstall (separate, secondary) --- */}
+          <div className="cg-uninstall">
+            <p className="cg-uninstall__label">{t("Uninstall anytime — credentials stay untouched", "随时卸载 —— 绝不动你的凭证")}</p>
+            <PromptBlock className="cg-code cg-code--sm" code={UNINSTALL_CMD} copyLabel={t("Copy", "复制")} copiedLabel={t("Copied", "已复制")}>
+              <span className="cg-c-cmd">~/.claude/claude-gauge-uninstall.sh</span>
+            </PromptBlock>
           </div>
         </div>
       </div>

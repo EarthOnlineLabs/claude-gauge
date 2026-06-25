@@ -48,13 +48,21 @@
 
 ## 安装
 
+**方式一 —— 下载安装包**（无需终端）：
+
+下载 [ClaudeGauge.pkg](https://github.com/EarthOnlineLabs/claude-gauge/releases/latest/download/ClaudeGauge.pkg)，双击安装即可。
+
+**方式二 —— 终端：**
+
 ```bash
 git clone https://github.com/EarthOnlineLabs/claude-gauge.git
 cd claude-gauge
 ./install.sh
 ```
 
-几秒后菜单栏右上角就会出现用量百分比。不想要了：`./uninstall.sh`，清得干净，且不碰你的凭证。
+几秒后菜单栏右上角就会出现用量百分比。
+
+**卸载** —— 运行 `~/.claude/claude-gauge-uninstall.sh`，清得干净，且不碰你的凭证。
 
 > 需要 macOS、Claude **Pro 或 Max** 订阅、以及已登录的 [Claude Code](https://claude.com/claude-code)。菜单栏宿主 [SwiftBar](https://github.com/swiftbar/SwiftBar) 要是没装，脚本会帮你装上。
 
