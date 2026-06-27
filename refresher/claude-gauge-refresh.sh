@@ -17,6 +17,9 @@ CLIENT_ID="9d1c250a-e61b-44d9-88ed-5944d1962f5e"
 TOKEN_URL="https://platform.claude.com/v1/oauth/token"
 UA="claude-cli/1.0.119 (external, cli)"
 SEC="/usr/bin/security"; SERVICE="Claude Code-credentials"
+# 本机登录用户名 —— 钥匙串读取锁定到它，绝不读 iCloud 同步/机器迁移带进来的【他人】同名凭证
+try: LOCAL_ACCT=subprocess.run(["/usr/bin/id","-un"],capture_output=True,text=True,timeout=5).stdout.strip() or os.environ.get("USER") or None
+except Exception: LOCAL_ACCT=os.environ.get("USER") or None
 # ① Claude 没在用（非强制）→ 不轮询、不续命、直接退出（菜单栏侧自行隐藏）。仅查进程/App，不读内容。
 def _claude_running():
     for cmd in (["/usr/bin/lsappinfo","find","bundleID=com.anthropic.claudefordesktop"],["/usr/bin/pgrep","-x","claude"]):
@@ -35,21 +38,31 @@ def awrite(path,obj):
     fd,tmp=tempfile.mkstemp(dir=dd)
     with os.fdopen(fd,"w") as f: json.dump(obj,f)
     os.replace(tmp,path)
-def kc_read():
-    """钥匙串完整 blob（含 mcpOAuth），失败 None"""
-    try:
-        raw=subprocess.run([SEC,"find-generic-password","-s",SERVICE,"-w"],capture_output=True,text=True,timeout=5).stdout
-        return json.loads(raw)
-    except Exception: return None
-def kc_account():
+def _acct_of_service():
+    """service-only 命中项的 acct（pin 取不到时，回写要精确定位到同一条，不另建新项）。"""
     try:
         out=subprocess.run([SEC,"find-generic-password","-s",SERVICE],capture_output=True,text=True,timeout=5).stdout
         for ln in out.splitlines():
             ln=ln.strip()
             if ln.startswith('"acct"'): return ln.split('=',1)[1].strip().strip('"')
     except Exception: pass
-    return os.environ.get("USER","")
-def refresh_oauth(blob):
+    return None
+def kc_read():
+    """读【本机用户自己】的凭证 blob（含 mcpOAuth），返回 (blob, acct_used)，失败 (None,None)。
+    先按 service+本机用户名 pin —— 防止读到 iCloud 钥匙串同步/机器迁移带进来的【他人】同名项
+    （否则本机会显示别人的额度，已实测踩过）；pin 取不到再退回 service-only，兼容把 acct 存成邮箱等的旧版 CC。
+    acct_used 供续命回写时精确定位同一条。"""
+    if LOCAL_ACCT:
+        try:
+            raw=subprocess.run([SEC,"find-generic-password","-s",SERVICE,"-a",LOCAL_ACCT,"-w"],capture_output=True,text=True,timeout=5).stdout
+            if raw.strip(): return json.loads(raw),LOCAL_ACCT
+        except Exception: pass
+    try:
+        raw=subprocess.run([SEC,"find-generic-password","-s",SERVICE,"-w"],capture_output=True,text=True,timeout=5).stdout
+        if raw.strip(): return json.loads(raw),(_acct_of_service() or LOCAL_ACCT)
+    except Exception: pass
+    return None,None
+def refresh_oauth(blob,acct):
     """零额度续命：refresh_token 换新 access_token，原地写回钥匙串（只改3字段，保留其余）。
     返回 (新 claudeAiOauth 或 None, 是否 invalid_grant)。invalid_grant=钥匙串里的 RT 已被服务端作废，
     续命无解、唯有用户在 CC 里 /login 重新登录能救 —— 用于点亮诚实失败态，区别于网络抖动（后者不算 dead）。"""
@@ -64,7 +77,7 @@ def refresh_oauth(blob):
         nb["claudeAiOauth"]["accessToken"]=at
         if r.get("refresh_token"): nb["claudeAiOauth"]["refreshToken"]=r["refresh_token"]
         nb["claudeAiOauth"]["expiresAt"]=int(time.time()*1000)+(r.get("expires_in") or 28800)*1000
-        w=subprocess.run([SEC,"add-generic-password","-U","-s",SERVICE,"-a",kc_account(),"-w",json.dumps(nb,separators=(',',':'))],capture_output=True,text=True,timeout=10)
+        w=subprocess.run([SEC,"add-generic-password","-U","-s",SERVICE,"-a",acct or os.environ.get("USER",""),"-w",json.dumps(nb,separators=(',',':'))],capture_output=True,text=True,timeout=10)
         if w.returncode!=0: return None,False
         return nb["claudeAiOauth"],False
     except urllib.error.HTTPError as e:
@@ -74,12 +87,12 @@ def refresh_oauth(blob):
     except Exception: return None,False
 
 st=load(STATE,{}); now=time.time()
-blob=kc_read()
+blob,kc_acct=kc_read()
 tk=blob.get("claudeAiOauth") if blob else None
 auth_dead=bool(st.get("auth_dead"))
 # ① 续命：仅临近过期(≤60s)或被强制时（纯鉴权，零额度，不与活跃 CC 抢轮换）
 if blob and tk and tk.get("expiresAt") and (os.environ.get("CQ_REFRESH")=="1" or tk["expiresAt"]/1000 < now+60):
-    new,dead=refresh_oauth(blob)
+    new,dead=refresh_oauth(blob,kc_acct)
     if new: tk=new; auth_dead=False
     elif dead: auth_dead=True
 # 续命被服务端拒（RT 失效）→ 立刻持久化诚实失败态供菜单栏提示 /login（早于节流/退出；恢复时由成功 poll 收尾清零）

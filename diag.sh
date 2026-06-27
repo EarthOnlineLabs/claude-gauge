@@ -12,13 +12,36 @@ print("=" * 60)
 print("ClaudeGauge 诊断报告")
 print("=" * 60)
 
-# 1. 读 token（不打印）
+# 1. 读 token（不打印 token 本身；先锁本机用户，避免读到 iCloud 同步进来的他人凭证）
+try: LOCAL_ACCT = subprocess.run(["/usr/bin/id","-un"], capture_output=True, text=True, timeout=5).stdout.strip()
+except Exception: LOCAL_ACCT = os.environ.get("USER","")
+def _kc_accounts():
+    """列出钥匙串里所有同 service 的 acct —— 多于一条即说明掺入了他人/同步凭证。"""
+    accts=[]
+    try:
+        out=subprocess.run(["security","dump-keychain"], capture_output=True, text=True, timeout=30).stdout
+        cur=None
+        for ln in out.splitlines():
+            s=ln.strip()
+            if s.startswith('"acct"'): cur=s.split('=',1)[1].strip().strip('"') if '=' in s else None
+            if s.startswith('"svce"') and SERVICE in s: accts.append(cur)
+    except Exception: pass
+    return accts
 try:
-    raw = subprocess.run([SEC, "find-generic-password", "-s", SERVICE, "-w"],
-                         capture_output=True, text=True, timeout=5).stdout
+    raw=""
+    if LOCAL_ACCT:
+        raw = subprocess.run([SEC,"find-generic-password","-s",SERVICE,"-a",LOCAL_ACCT,"-w"], capture_output=True, text=True, timeout=5).stdout
+    pinned = bool(raw.strip())
+    if not pinned:
+        raw = subprocess.run([SEC,"find-generic-password","-s",SERVICE,"-w"], capture_output=True, text=True, timeout=5).stdout
     blob = json.loads(raw)
     tk = blob["claudeAiOauth"]
     print(f"\n✓ Token 读取成功 (尾4位: ...{tk['accessToken'][-4:]})")
+    print(f"  本机用户名: {LOCAL_ACCT} ；按本机用户名直接读到: {'是' if pinned else '否（退回 service-only，可能掺入他人凭证）'}")
+    accts=_kc_accounts()
+    print(f"  钥匙串内 '{SERVICE}' 项数量: {len(accts)} ，acct 列表: {accts}")
+    if len([a for a in accts if a]) > 1:
+        print("  ⚠️ 检测到多条同名凭证 —— 极可能 iCloud 钥匙串同步/机器迁移把他人凭证带了进来！")
 except Exception as e:
     print(f"\n✗ Token 读取失败: {e}"); raise SystemExit(1)
 

@@ -5,6 +5,22 @@ All notable changes to ClaudeGauge will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1]
+
+### Fixed
+- **CG could show *another person's* usage if their Claude credential synced onto
+  your Mac.** All three credential readers (refresher, plugin, diagnostic) looked
+  up the keychain by service name only (`Claude Code-credentials`), without pinning
+  the account. If a second machine's `Claude Code-credentials` item arrived via
+  iCloud Keychain sync or a Migration-Assistant/clone transfer, a service-only
+  lookup could return *that* foreign item — so the menu bar displayed the other
+  account's quota and the diagnostic reported the other account's org. Reads now
+  pin to the local macOS user (`security … -a "$(id -un)"`) first and only fall
+  back to service-only for older CCs that stored the account differently; the
+  refresher's OAuth write-back now targets the exact item it read (never creating
+  a second entry). The diagnostic also lists every same-service keychain item and
+  warns when more than one exists.
+
 ## [Unreleased]
 
 ### Fixed
