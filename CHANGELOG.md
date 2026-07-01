@@ -20,16 +20,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
      service-only only for older CCs that stored the account differently; the
      OAuth write-back targets the exact item it read (never creating a second
      entry).
-  2. *Cached data carried no owner identity.* `cache.json`/`org.json` stored the
-     numbers and org without binding them to any account, so a stale or copied
-     cache would be shown verbatim. Every cache write is now stamped with the
-     owning credential's fingerprint (a one-way hash of the access token — never
-     the token itself) and org; the plugin refuses to display any cache whose
-     stamp doesn't match the currently logged-in credential, falling back to a
-     fresh fetch with the real token instead. The refresher re-derives the org
-     per credential and purges usage cache on an account change. Net effect: no
-     matter how another account's credential or cache reaches the machine, a
-     logged-in user only ever sees their own data.
+  2. *Cached data carried no owner identity.* `cache.json`/`live.json` stored the
+     numbers without binding them to a credential, so a stale or copied cache
+     would be shown verbatim. Every cached datum is now stamped with `fp` — a
+     one-way fingerprint (`sha256("cg1:"+accessToken)[:16]`, never the token
+     itself) of the token that fetched it. The menu bar displays a datum only when
+     its `fp` equals the fingerprint of the token currently in the keychain;
+     anything else (a foreign/synced credential's data, a previous account's
+     leftovers after switching, a copied cache) has a different `fp` and is
+     refused — the plugin instead fetches fresh with the current token. The
+     fingerprint needs no network (immune to the usage API's aggressive 429s) and
+     is always computable, so there is no "no-org"/"bootstrap-failed" hole. The
+     statusline bridge stamps `live.json` the same way (reading the pinned keychain
+     token locally, no network; fingerprint cached ~90s to keep the CC statusline
+     fast). Net effect: however another account's credential or cache reaches the
+     machine, a logged-in user only ever sees their own data; the worst case on a
+     token rotation is a brief, honest "stale/unavailable" — never someone else's
+     numbers. `org.json` is now used only to supply the usage API's organization
+     header, itself gated by the same fingerprint.
 - The diagnostic lists every same-service keychain item and warns when more than
   one exists.
 

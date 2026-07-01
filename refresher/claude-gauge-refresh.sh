@@ -96,13 +96,17 @@ tk=blob.get("claudeAiOauth") if blob else None
 auth_dead=bool(st.get("auth_dead"))
 # ① 续命：仅临近过期(≤60s)或被强制时（纯鉴权，零额度，不与活跃 CC 抢轮换）
 if blob and tk and tk.get("expiresAt") and (os.environ.get("CQ_REFRESH")=="1" or tk["expiresAt"]/1000 < now+60):
+    _oldfp=cred_fp(tk["accessToken"])              # 轮换前的旧指纹
     new,dead=refresh_oauth(blob,kc_acct)
     if new:
         tk=new; auth_dead=False
-        # token 轮换后立刻把缓存凭证戳更新到新 token，避免本次 poll 若失败时插件把自己的旧缓存误判为他人数据
+        # 我们刚给【同一账号】把 token 从旧换新 → 把【本就属于旧 token】的缓存改盖新指纹（只认旧指纹的那份，
+        # 绝不碰外来缓存/别账号缓存，故不会泄露）。这样即便随后 poll 被 429，插件仍能按新指纹认出这是本人(略旧)
+        # 数据并显示为陈旧，而不是空白——修复"轮换+429 空白"。
         try:
-            _c=load(CACHE,None)
-            if _c is not None: _c["cred"]=cred_fp(new["accessToken"]); awrite(CACHE,_c)
+            _c=load(CACHE,None); _nf=cred_fp(new["accessToken"])
+            if _c is not None and _c.get("fp")==_oldfp:
+                _c["fp"]=_nf; awrite(CACHE,_c)
         except Exception: pass
     elif dead: auth_dead=True
 # 续命被服务端拒（RT 失效）→ 立刻持久化诚实失败态供菜单栏提示 /login（早于节流/退出；恢复时由成功 poll 收尾清零）
@@ -116,26 +120,23 @@ if fs>=3: iv=max(iv,600)
 elif fs>=1: iv=max(iv,300)
 if os.environ.get("CQ_FORCE")!="1" and os.environ.get("CQ_REFRESH")!="1" and now-st.get("last_poll_ts",0) < iv: raise SystemExit(0)
 if not tk or (tk.get("expiresAt") and tk["expiresAt"]/1000 < now): raise SystemExit(0)
-# ②b 解析组织 UUID（多组织用户的用量 API 需要显式指定，否则可能返回错误组织的数据）
-def get_org_uuid(access_token):
-    fp=cred_fp(access_token)
+# ②b 归属靠 fp（当前 token 指纹）——见 ④ 缓存盖 fp、插件按 fp 核对。这里只解析 org_uuid 供用量 API 的
+#    x-organization-uuid 头用；org.json 也盖上 fp，好让插件兜底时判断该 org 是否属于当前 token。
+MYFP=cred_fp(tk["accessToken"])
+def get_org_for_header(access_token):
     cached=load(ORG_CACHE,{})
-    # 仅当 org 缓存属于【当前这份凭证】且未过期才复用——换号/外来同步凭证的旧 org 一律不沿用
-    if cached.get("fp")==fp and now - cached.get("ts",0) < 86400 and cached.get("name"): return cached.get("uuid")
+    if cached.get("fp")==MYFP and now - cached.get("ts",0) < 86400 and "uuid" in cached:
+        return cached.get("uuid")           # 同一 token 的已知 org，零 bootstrap 复用
     try:
         req=urllib.request.Request("https://api.anthropic.com/api/claude_cli/bootstrap",headers={"Authorization":f"Bearer {access_token}","anthropic-beta":"oauth-2025-04-20"})
         bs=json.load(urllib.request.urlopen(req,timeout=10))
         oa=bs.get("oauth_account") or {}
-        uuid=oa.get("organization_uuid") or None
-        # 解析出的 org 与旧缓存不同(换号/外来) → 清掉可能属于别账号的用量缓存，绝不让它被显示
-        if cached.get("uuid") and cached.get("uuid")!=uuid:
-            try: os.remove(CACHE)
-            except Exception: pass
-        awrite(ORG_CACHE,{"uuid":uuid,"name":oa.get("organization_name"),"type":oa.get("organization_type"),"tier":oa.get("organization_rate_limit_tier"),"fp":fp,"ts":now})
-        return uuid
+        org=oa.get("organization_uuid") or None
+        awrite(ORG_CACHE,{"uuid":org,"name":oa.get("organization_name"),"type":oa.get("organization_type"),"tier":oa.get("organization_rate_limit_tier"),"fp":MYFP,"ts":now})
+        return org
     except Exception:
-        return cached.get("uuid") if cached.get("fp")==fp else None  # bootstrap 失败：只在指纹匹配时沿用旧 org，否则不带 org 头
-org_uuid=get_org_uuid(tk["accessToken"])
+        return cached.get("uuid") if cached.get("fp")==MYFP else None  # 仅当同一 token 才沿用旧 org，否则不带头
+org_uuid=get_org_for_header(tk["accessToken"])
 # ③ poll（429 限流时重试一次，避免缓存永久卡死——这是测试用户数据不更新的根因）
 j=None
 hdrs={"Authorization":f"Bearer {tk['accessToken']}","anthropic-beta":"oauth-2025-04-20","User-Agent":UA}
@@ -175,8 +176,9 @@ if not data.get("seven_day_opus"):
     v=_pick(None,"seven_day_opus");
     if v: data["seven_day_opus"]=v
 if j.get("extra_usage"): data["extra_usage"]=j["extra_usage"]
-# 盖账号身份戳：org=这份数据属于哪个组织，cred=属于哪份凭证。插件显示前据此核对，对不上不显示别人的数据。
-awrite(CACHE,{"ts":now,"data":data,"org":org_uuid,"cred":cred_fp(tk["accessToken"])})
+# 盖归属戳 fp=取这份数据所用 token 的指纹（恒可算、不依赖 bootstrap）。插件只显示 fp==当前 token 的缓存，
+# 别账号/换号/轮换后的旧数据 fp 必不符 → 一律拒显。org 留作参考。
+awrite(CACHE,{"ts":now,"data":data,"fp":MYFP,"org":org_uuid})
 # ⑤ 变化检测（喂给自适应节流，决定下次多快再 poll）
 u5=(data.get("five_hour") or {}).get("utilization"); u7=(data.get("seven_day") or {}).get("utilization")
 p5,p7=st.get("last_5h"),st.get("last_7d")
